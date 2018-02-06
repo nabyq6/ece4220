@@ -1,1 +1,1 @@
-cmd_/home/pi/workspace/lab1/src/lab1_week2.ko := ld -EL -r  -T ./scripts/module-common.lds --build-id  -o /home/pi/workspace/lab1/src/lab1_week2.ko /home/pi/workspace/lab1/src/lab1_week2.o /home/pi/workspace/lab1/src/lab1_week2.mod.o
+cmd_/home/pi/workspace/ece4220/lab1/src/lab1_week2.ko := ld -EL -r  -T ./scripts/module-common.lds --build-id  -o /home/pi/workspace/ece4220/lab1/src/lab1_week2.ko /home/pi/workspace/ece4220/lab1/src/lab1_week2.o /home/pi/workspace/ece4220/lab1/src/lab1_week2.mod.o
