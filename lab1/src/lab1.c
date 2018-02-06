@@ -26,7 +26,7 @@ int main(void) {
     wiringPiSetup();
     int time = 1;
     int button = 1;
-
+	//seting up the pins for input and output
     pinMode(LED1, OUTPUT);
     pinMode(LED2, OUTPUT);
     pinMode(speaker, OUTPUT);
@@ -35,12 +35,13 @@ int main(void) {
     pinMode(button3, INPUT);
     pinMode(button4, INPUT);
     pinMode(button5, INPUT);
+	// putting position of the pin
     pullUpDnControl(button1,PUD_DOWN);
     pullUpDnControl(button2,PUD_DOWN);
     pullUpDnControl(button3,PUD_DOWN);
     pullUpDnControl(button4,PUD_DOWN);
     pullUpDnControl(button5,PUD_DOWN);
-
+/* switching the leds
     while( time < 5 )
     {   
 	
@@ -53,7 +54,8 @@ int main(void) {
 	
 
     }
-
+*/ 
+	//what button the user wants to be able to push to activate the speaker
     do
     {
     printf("\n\n\n Enter a button number 1-5 to use to play speaker");
@@ -63,7 +65,7 @@ int main(void) {
             printf("Invalid choice please try again\n");
         }
     }while(button < 1 && button > 5);
-
+	// while loop in every case statement that will endlessly loop until the user cltr c or quites
     switch(button){
 
     case 1:
