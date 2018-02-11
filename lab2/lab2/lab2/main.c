@@ -31,10 +31,12 @@ void import_info( char filename[], info *file);
 void *running_thread1(void *file);
 void *running_thread2(void *file);
 void *running_thread3(void *file);
+void *running_thread4(void *file);
 
 void testing_case1(info *file);
 void testing_case2(info *file);
 void testing_case3(info *file);
+void testing_case4(info *file);
 
 int main(void)
 {
@@ -67,26 +69,78 @@ int main(void)
     testing_case1(&file1);
     testing_case2(&file1);
     testing_case3(&file1);
+    testing_case4(&file1);
     
     printf("\n\n\n\n15x15.txt\n");
     testing_case1(&file2);
     testing_case2(&file2);
     testing_case3(&file2);
+    testing_case4(&file2);
     
     printf("\n\n\n20x10.txt\n");
     testing_case1(&file3);
     testing_case2(&file3);
     testing_case3(&file3);
+    testing_case4(&file3);
     return 0;
     
     
 }
+void testing_case4(info *file)
+{
+    float time = 0, time_end;
+    void *result;
+    pthread_t thread1[100][100];
+    int i = 0, j  = 0, k = 0;
+    
+    file->result = 0;
+    time = clock();
+    for(i = 0; i < 10 ; i++)
+    {
+        for( k = 0; k < file->row; k++)
+        {
+            file->row_to_scan = k;
+            for( j = 0; j < file->columns; j++)
+            {
+                file->columns_to_scan = j;
+                pthread_create( &thread1[k][j], NULL, running_thread4, (void *)file);
+            }
+        }
+        for( k = 0; k < file->row; k++)
+        {
+                for( j = 0; j < file->columns; j++)
+                {
+                    pthread_join( thread1[k][j], &result);
+                    file->result += (int) result;
+                }
+        }
+    }
+    time_end = clock();
+    printf("%d threads: \n", file->columns * file->row);
+    printf("Find: %d  how many where found: %d \n", file->find, (file->result/10) );
+    printf("Time to complete was: %fs\n",((time_end - time) /10));
+}
 
+void *running_thread4(void *file)
+{
+    struct info running = *(struct info*)file;
+    int result = 0;
+    int i , j;
+    j = running.row_to_scan;
+    i = running.columns_to_scan;
+    
+        if(running.data[j][i] == running.find)
+        {
+            ++result;
+        }
+    
+    return (void *)result;
+}
 void testing_case3(info *file)
 {
     float time = 0, time_end;
     void *result;
-    pthread_t thread1[0][0];
+    pthread_t thread1[100][100];
     int i = 0, j  = 0;
     
     file->result = 0;
@@ -130,7 +184,7 @@ void testing_case2(info *file)
 {
     float time = 0, time_end;
     void *result = 0x0;
-    pthread_t thread1[0][0];
+    pthread_t thread1[100][100];
     int i = 0, j  = 0;
     
     file->result = 0;
@@ -197,7 +251,7 @@ void *running_thread1(void *file)
     int i, j;
     struct info running = *(struct info*)file;
     int result = 0;
-    
+
     for( i = 0; i < running.row; i++ )
     {
         for( j = 0; j < running.columns; j++)
