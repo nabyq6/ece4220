@@ -21,6 +21,9 @@
 #define second "second.txt"
 #define combined "combined.txt"
 
+char buffer[100];
+char file[20][100];
+
 #define MY_PRIORITY 51;
 
 void *odd_from_file( void *file);
@@ -46,7 +49,12 @@ int main (void)
     pthread_create(&writetofile, NULL, write_to_file, (void *)combinedfile);
     
     
-    
+    pthread_join(readeven, NULL);
+    pthread_join(readodd, NULL);
+    pthread_join(writetofile, NULL);
+
+    int i;
+    for(
     
     
 
@@ -56,15 +64,20 @@ int main (void)
     fclose(combinedfile);
     
 }
+int set_for_Realtime( void)
+{
+    struct sched_param param;
+    param.sched_priority = MY_PRIORITY;
+
+    if(sched_setscheduler( 0, SCHED_FIFO, &param) < 0)
+    {
+    printf("Real time is not accessable");
+    }
+    
+}
 void *odd_from_file(void *file)
 {
-    int i = 0;
-    struct sched_param param;
-    {
-        param.sched_priority = MY_PRIORITY + 3;
-    }param;
-    
-    sched_setscheduler( 0, SCHED_FIFO, &param);
+    set_for_Realtime();
     
     int timer_fd = timerfd_create( CLOCK_MONOTONIC, 0);
     
@@ -76,41 +89,87 @@ void *odd_from_file(void *file)
     itval.it_value.tv_sec = //inittime_second;
     itval.it_value.tv_nsec = //initime_nsecond;
     }itval;
-    
-        uint64_t num_periods = 0;
-    read(timer_fd, &num_periods, sizeof(num_periods));
-            if(num_periods > 1)
-            {
-                puts("MISSED WINDOW IN ODD READ");
-            }
-    
-    char OddContent[100];
+    timerfd_settime (timer_fd, 0, &itval, NULL);
+    uint64_t num_periods = 0;
     printf("LineContent:");
-    for( i  = 0; i < 20; i++)
+    for( i  = 0; i < 10; i++)
     {
-        scanf("%99[^\n]", &OddContent);
-        getchar();
-        printf("%s", OddContent);
+        buffer[0] = '\0';
+        fgets(buffer, 100, file);
+        printf("1 %s\n", buffer); // testing the buffer to insure something is being read in
         
+        read(timer_fd, &num_periods, sizeof(num_periods));
+        if(num_periods > 1)
+        {
+            puts("MISSED WINDOW IN ODD READ");
+        }
     }
-    
-    
-    
-    
-    
-    
-    return 0;
+    return NULL;
     
 }
 
 void *even_from_file(void *file)
 {
-    return 0;
+    set_for_Realtime();
+    
+    int timer_fd = timerfd_create( CLOCK_MONOTONIC, 0);
+
+    struct itimerspec itval;
+    {
+        itval.it_interval.tv_sec = //Peroid_second;
+        itval.it_interval.tv_nsec = //Peroid_nsecond;
+        
+        itval.it_value.tv_sec = //inittime_second;
+        itval.it_value.tv_nsec = //initime_nsecond;
+    }itval;
+    timerfd_settime (timer_fd, 0, &itval, NULL);
+    uint64_t num_periods = 0;
+    int i = 0;
+    printf("Line content:");
+    for( i  = 0; i < 10; i++)
+    {
+        buffer[0] = '\0';
+        fgets(buffer, 100, file);
+        printf("1 %s\n", buffer); // testing the buffer to insure something is being read in
+        
+        read(timer_fd, &num_periods, sizeof(num_periods));
+        if(num_periods > 1)
+        {
+            puts("MISSED WINDOW IN EVEN READ");
+            exit(1);
+        }
+    }
+    return NULL;
 }
 
 void *write_to_file( void *file )
 {
+    set_for_Realtime();
     
-
-    return 0;
+    int timer_fd = timerfd_create( CLOCK_MONOTONIC, 0);
+    
+    struct itimerspec itval;
+    {
+        itval.it_interval.tv_sec = //Peroid_second;
+        itval.it_interval.tv_nsec = //Peroid_nsecond;
+        
+        itval.it_value.tv_sec = //inittime_second;
+        itval.it_value.tv_nsec = //initime_nsecond;
+    }itval;
+    timerfd_settime (timer_fd, 0, &itval, NULL);
+    uint64_t num_periods = 0;
+    printf("Line content:");
+    for( i  = 0; i < 20; i++)
+    {
+        strcpy(arr[i], buffer);
+        printf("1 %s\n", buffer); // testing the buffer to insure something is being read in
+        
+        read(timer_fd, &num_periods, sizeof(num_periods));
+        if(num_periods > 1)
+        {
+            puts("MISSED WINDOW IN WRITING TO FILE");
+            exit(1);
+        }
+    }
+    return NULL;
 }
