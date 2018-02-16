@@ -14,7 +14,7 @@
 #include <fcntl.h>
 #include <sched.h>
 #include <stdint.h>
-//#include <sys/timerfd.h> library may only exsist on the PI
+#include <sys/timerfd.h> //library may only exsist on the PI
 #include <time.h>
 
 #define first "first.txt"
@@ -59,7 +59,7 @@ int main (void)
     fclose(firstfile);
     fclose(secondfile);
     fclose(combinedfile);
-    
+    return 0;
 }
 int set_for_Realtime( void)
 {
@@ -70,7 +70,7 @@ int set_for_Realtime( void)
     {
     printf("Real time is not accessable");
     }
-    
+    return 0;
 }
 void *odd_from_file(void *file)
 {
@@ -79,15 +79,15 @@ void *odd_from_file(void *file)
     int timer_fd = timerfd_create( CLOCK_MONOTONIC, 0);
     
     struct itimerspec itval;
-    {
-    itval.it_interval.tv_sec = //Peroid_second;
-    itval.it_interval.tv_nsec = //Peroid_nsecond;
+        itval.it_interval.tv_sec = 0;//Peroid_second;
+        itval.it_interval.tv_nsec = 4000000;//Peroid_nsecond;
+        itval.it_value.tv_sec = 0;//inittime_second;
+        itval.it_value.tv_nsec = 1000000;//initime_nsecond;
     
-    itval.it_value.tv_sec = //inittime_second;
-    itval.it_value.tv_nsec = //initime_nsecond;
-    }itval;
-    timerfd_settime (timer_fd, 0, &itval, NULL);
+        timerfd_settime (timer_fd, 0, &itval, NULL);
+    
     uint64_t num_periods = 0;
+    int i;
     printf("LineContent:");
     for( i  = 0; i < 10; i++)
     {
@@ -112,14 +112,15 @@ void *even_from_file(void *file)
     int timer_fd = timerfd_create( CLOCK_MONOTONIC, 0);
 
     struct itimerspec itval;
-    {
-        itval.it_interval.tv_sec = //Peroid_second;
-        itval.it_interval.tv_nsec = //Peroid_nsecond;
+   
+        itval.it_interval.tv_sec = 0//Peroid_second;
+        itval.it_interval.tv_nsec = 4000000//Peroid_nsecond;
         
-        itval.it_value.tv_sec = //inittime_second;
-        itval.it_value.tv_nsec = //initime_nsecond;
-    }itval;
-    timerfd_settime (timer_fd, 0, &itval, NULL);
+        itval.it_value.tv_sec = 0//inittime_second;
+        itval.it_value.tv_nsec = 3000000//initime_nsecond;
+    
+        timerfd_settime (timer_fd, 0, &itval, NULL);
+    
     uint64_t num_periods = 0;
     int i = 0;
     printf("Line content:");
@@ -131,10 +132,10 @@ void *even_from_file(void *file)
         
         read(timer_fd, &num_periods, sizeof(num_periods));
         if(num_periods > 1)
-        {
-            puts("MISSED WINDOW IN EVEN READ");
-            exit(1);
-        }
+            {
+                puts("MISSED WINDOW IN EVEN READ");
+                exit(1);
+            }
     }
     return NULL;
 }
@@ -146,19 +147,19 @@ void *write_to_file( void *file )
     int timer_fd = timerfd_create( CLOCK_MONOTONIC, 0);
     
     struct itimerspec itval;
-    {
-        itval.it_interval.tv_sec = //Peroid_second;
-        itval.it_interval.tv_nsec = //Peroid_nsecond;
+        itval.it_interval.tv_sec = 0;//Peroid_second;
+        itval.it_interval.tv_nsec = 2000000;//Peroid_nsecond;
         
-        itval.it_value.tv_sec = //inittime_second;
-        itval.it_value.tv_nsec = //initime_nsecond;
-    }itval;
+        itval.it_value.tv_sec = 0;//inittime_second;
+        itval.it_value.tv_nsec = 2000000; //initime_nsecond;
+    
     timerfd_settime (timer_fd, 0, &itval, NULL);
     uint64_t num_periods = 0;
+    int i;
     printf("Line content:");
     for( i  = 0; i < 20; i++)
     {
-        strcpy(arr[i], buffer);
+        strcpy(&file[i], buffer);
         printf("1 %s\n", buffer); // testing the buffer to insure something is being read in
         
         read(timer_fd, &num_periods, sizeof(num_periods));
