@@ -52,9 +52,6 @@ int main (void)
     pthread_join(readeven, NULL);
     pthread_join(readodd, NULL);
     pthread_join(writetofile, NULL);
-
-    int i;
-    for(
     
     
 
