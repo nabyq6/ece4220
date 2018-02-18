@@ -85,7 +85,7 @@ int main(void)
     printf("\n\n\n20x10.txt\n");//testing this file in each type of search
     testing_case1(&file3);
     testing_case2(&file3);
-    testing_case3(&file3);
+    //testing_case3(&file3);
     testing_case4(&file3);
     return 0;
     
@@ -158,23 +158,36 @@ void testing_case3(info *file)// each column as a thread
 {
     float time = 0, time_end;
     void *result;
-    pthread_t thread1[100][100];
+    pthread_t *thread1;
+    thread_specific *perThreadJob1;
+   // pthread_t thread1[100][100];
     int i = 0, j  = 0;
+    
+    thread1 = (pthread_t*) alloca(sizeof(pthread_t*) * file->columns);
+    perThreadJob1 = (thread_specific*) alloca(sizeof(thread_specific*) * file->columns);
+    thread1[i] = *(pthread_t*) alloca(sizeof(pthread_t));
+        perThreadJob1[i] = *(thread_specific*)alloca(sizeof(thread_specific));
     
     file->result = 0;
     time = clock();
-    for(i = 0; i < 10 ; i++)//running each search ten times to get the average
+    //for(i = 0; i < 10 ; i++)//running each search ten times to get the average
     {
-        for( j = 0; j < file->columns; j++)
+        //printf("%d\n", file->row);
+        for( j = 0; j < file->columns -1 ; j++)
         {
-            file->columns_to_scan = j;
-            pthread_create( &thread1[0][j], NULL, running_thread3, (void *)file);
-            usleep(100);//sleeping to allow time for excution of the thread
+            
+            perThreadJob1[j].info = file; // only copying the pointer
+            perThreadJob1[j].columns_to_scan = j ;
+            printf("*%d\n", j);
+            pthread_create( &thread1[j], NULL, running_thread3, (void *)&perThreadJob1[j]);
+            
+            //pthread_create( &thread1[j], NULL, running_thread3, (void *)file);
+           usleep(100);//sleeping to allow time for excution of the thread
         }
         for( j = 0; j < file->columns; j++)
         {
-            pthread_join( thread1[0][j], &result);
-            file->result += (int) result;
+            pthread_join( thread1[j], &result);
+            file->result += (int)(intptr_t) result;
         }
     }
     time_end = clock();
@@ -185,19 +198,27 @@ void testing_case3(info *file)// each column as a thread
 
 void *running_thread3(void *file)
 {
-    int j;
-    struct info running = *(struct info*)file;
-    int result = 0;
+    int i = 0;
+    int j = 0;
+    thread_specific *job = (thread_specific*)file; // not making a full copy, just converting the reference
+    info *running = job->info;
     
-    for( j = 0; j < running.row; j++)
+    j = job->columns_to_scan;
+    void * result = 0;
+    //printf("--%d\n", job->columns_to_scan);
+    printf("--%d\n", j);
+    for( i = 0; i < running->row; i++)
     {
-        if(running.data[j][running.columns_to_scan] == running.find)
+        printf("i:%d j:%d\n", i, j);
+    if(running->data[i][j] == running->find)
         {
             ++result;
         }
     }
-    return (void *)result;
+    printf("%d" ,result);
+    return (void*)(intptr_t) result;
 }
+
 
 void testing_case2(info *file)//each row as a thead
 {
@@ -205,7 +226,7 @@ void testing_case2(info *file)//each row as a thead
     void *result = 0x0;
     pthread_t thread1[100][100];
     int i = 0, j  = 0;
-    5
+    
     file->result = 0;
     time = clock();
     for(i = 0; i < 10 ; i++)//running each search ten times to get the average
