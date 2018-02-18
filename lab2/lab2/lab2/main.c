@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <string.h>
+#include <time.h>
 #include <unistd.h>
 
 typedef struct info
@@ -25,8 +26,14 @@ typedef struct info
     int data[100][100];
     int find;
     int result;
-    
 }info;
+
+typedef struct thread_specific
+{
+    info * info;
+    int row_to_scan;
+    int columns_to_scan;
+} thread_specific;
 
 void import_info( char filename[], info *file);
 void *running_thread1(void *file);//testing using one thread
@@ -44,9 +51,12 @@ int main(void)
 {
     struct info file1, file2, file3;
     
-   // info *fileI = &file1;
+    //void *result;
+    // info *fileI = &file1;
     //info *fileII= &file2;
-   // info *fileIII = &file3;
+    // info *fileIII = &file3;
+    
+    //float time, time_end, total_time;
     
     import_info("2x100.txt", &file1);
     import_info("15x15.txt", &file2);
@@ -55,11 +65,11 @@ int main(void)
     printf("Enter the number you would like to search the files for: ");
     scanf("%d", &file1.find);
     file2.find = file3.find = file1.find;
-    file2.result = file3.result = file1.result;
+    file2.result = file3.result = file1.result = 0;
     
     //start the pthreading
     
-   
+    
     printf("\n\n2x100.txt\n");//testing this file in each type of search
     testing_case1(&file1);
     testing_case2(&file1);
@@ -78,62 +88,72 @@ int main(void)
     testing_case3(&file3);
     testing_case4(&file3);
     return 0;
-
+    
     
     
 }
 void testing_case4(info *file)//each element as a thread
 {
     float time = 0, time_end;
-    void *result;
-    pthread_t thread1[100][100];
+    pthread_t ** thread1;
+    thread_specific **perThreadJob;
+    //pthread_t thread1[100][100]; // gee, I hope that's enough!
+    //thread_specific perThreadJob[100][100];
     int i = 0, j  = 0, k = 0;
+    
+    // Init thread1 and perThreadJob
+    thread1 = (pthread_t**) alloca(sizeof(pthread_t*) * file->row);
+    perThreadJob = (thread_specific**) alloca(sizeof(thread_specific*) * file->row);
+    for (i=0; i<file->row; i++) {
+        thread1[i] = (pthread_t*) alloca(sizeof(pthread_t) * file->columns);
+        perThreadJob[i] = (thread_specific*) alloca(sizeof(thread_specific) * file->columns);
+    }
     
     file->result = 0;
     time = clock();
-    for(i = 0; i < 10 ; i++)
-        for(i = 0; i < 10 ; i++)//running each search ten times to get the average
+    for(i = 0; i < 10 ; i++)//running each search ten times to get the average
     {
         for( k = 0; k < file->row; k++)
         {
-            file->row_to_scan = k;
             for( j = 0; j < file->columns; j++)
             {
-                file->columns_to_scan = j;
-                pthread_create( &thread1[k][j], NULL, running_thread4, (void *)file);
-                usleep(100);//sleeping to allow time for excution of the thread
+                perThreadJob[k][j].info = file; // only copying the pointer
+                perThreadJob[k][j].row_to_scan = k;
+                perThreadJob[k][j].columns_to_scan = j;
+                pthread_create( &thread1[k][j], NULL, running_thread4, (void *)&perThreadJob[k][j]);
             }
         }
         for( k = 0; k < file->row; k++)
         {
-                for( j = 0; j < file->columns; j++)
-                {
-                    pthread_join( thread1[k][j], &result);
-                    file->result += (int) result;
-                }
+            for( j = 0; j < file->columns; j++)
+            {
+                void *result;
+                pthread_join( thread1[k][j], &result);
+                file->result += (int)(intptr_t) result;
+            }
         }
     }
     time_end = clock();
     printf("%d threads: \n", file->columns * file->row);
     printf("Find: %d  how many where found: %d \n", file->find, (file->result/10) );
-    printf("Time to complete was: %fs\n",((time_end - time) /10));
+    printf("Time to complete was: %fs\n",((double)(time_end - time) /10/ CLOCKS_PER_SEC));
 }
 
 void *running_thread4(void *file)
 {
-    struct info running = *(struct info*)file;
-    int result = 0;
-    int i , j;
-    j = running.row_to_scan;
-    i = running.columns_to_scan;
+    thread_specific *job = (thread_specific*)file; // not making a full copy, just converting the reference
+    info *running = job->info;
+    int j = job->row_to_scan;
+    int i = job->columns_to_scan;
     
-        if(running.data[j][i] == running.find)
-        {
-            ++result;
-        }
+    if(running->data[j][i] == running->find)
+    {
+        return (void *)(intptr_t)1;
+    }
     
-    return (void *)result;
+    return (void *)(intptr_t)0;
 }
+
 void testing_case3(info *file)// each column as a thread
 {
     float time = 0, time_end;
@@ -154,13 +174,13 @@ void testing_case3(info *file)// each column as a thread
         for( j = 0; j < file->columns; j++)
         {
             pthread_join( thread1[0][j], &result);
-            file->result += (int) result;// not there
+            file->result += (int) result;
         }
     }
     time_end = clock();
     printf("%d threads: \n", file->columns);
     printf("Find: %d  how many where found: %d \n", file->find, (file->result/10) );
-    printf("Time to complete was: %fs\n",((time_end - time) /10));
+    printf("Time to complete was: %fs\n",((double) (time_end - time) /10 / CLOCKS_PER_SEC));
 }
 
 void *running_thread3(void *file)
@@ -185,7 +205,7 @@ void testing_case2(info *file)//each row as a thead
     void *result = 0x0;
     pthread_t thread1[100][100];
     int i = 0, j  = 0;
-    
+    5
     file->result = 0;
     time = clock();
     for(i = 0; i < 10 ; i++)//running each search ten times to get the average
@@ -198,14 +218,14 @@ void testing_case2(info *file)//each row as a thead
         }
         for( j = 0; j < file->row; j++)
         {
-            pthread_join(thread1[j][0], &result);
+            pthread_join( thread1[j][0], &result);
             file->result += (int) result;
         }
     }
     time_end = clock();
     printf("%d threads: \n", file-> row);
     printf("Find: %d  how many where found: %d \n", file->find, (file->result/10));
-    printf("Time to complete was: %fs\n",((time_end - time) /10));
+    printf("Time to complete was: %fs\n",((double)(time_end - time) /10/ CLOCKS_PER_SEC));
 }
 
 void *running_thread2(void *file)
@@ -214,14 +234,13 @@ void *running_thread2(void *file)
     struct info running = *(struct info*)file;
     int result = 0;
     
-        for( j = 0; j < running.columns; j++)
+    for( j = 0; j < running.columns; j++)
+    {
+        if(running.data[running.row_to_scan][j] == running.find)
         {
-            if(running.data[running.row_to_scan][j] == running.find)
-            {
-                //make the cirtical section and use the lock here for everyone
-                ++result;
-            }
+            ++result;
         }
+    }
     return (void *)result;
 }
 
@@ -236,15 +255,15 @@ void testing_case1(info *file)//one thread to scan the whole file
     file->result = 0;
     time = clock();
     for(i = 0; i < 10 ; i++)//running each search ten times to get the average
-        {
-            pthread_create( &thread1[0][0], NULL, running_thread1, (void *)file);//creation of thread
-            pthread_join( thread1[0][0], &result);
-            file->result = (int) result;
-        }
+    {
+        pthread_create( &thread1[0][0], NULL, running_thread1, (void *)file);//creation of thread
+        pthread_join( thread1[0][0], &result);
+        file->result = (int) result;
+    }
     time_end = clock();
     printf("Single thread: ");
     printf("Find: %d  how mauny where found: %d \n", file->find, file->result );
-    printf("Time to complete was: %fs\n",(time_end -time) /10);
+    printf("Time to complete was: %fs\n",(double)(time_end -time) /10/ CLOCKS_PER_SEC);
 }
 
 void *running_thread1(void *file)
@@ -252,7 +271,7 @@ void *running_thread1(void *file)
     int i, j;
     struct info running = *(struct info*)file;
     int result = 0;
-
+    
     for( i = 0; i < running.row; i++ )
     {
         for( j = 0; j < running.columns; j++)
@@ -298,3 +317,4 @@ void import_info( char filename[],  info *file)//function will open and read in 
     //printf(" %d \n", file->data[0][5]); test 5 item to insure proper storage
     fclose(fp);//file is closed
 };
+

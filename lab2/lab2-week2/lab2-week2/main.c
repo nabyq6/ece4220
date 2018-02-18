@@ -14,7 +14,7 @@
 #include <fcntl.h>
 #include <sched.h>
 #include <stdint.h>
-#include <sys/timerfd.h> //library may only exsist on the PI
+#include <sys/timerfd.h> //library only exsist on the PI
 #include <time.h>
 
 #define first "first.txt"
@@ -59,7 +59,7 @@ int main (void)
     fclose(firstfile);
     fclose(secondfile);
     fclose(combinedfile);
-    return 0;
+    return NULL;
 }
 int set_for_Realtime( void)
 {
@@ -159,7 +159,7 @@ void *write_to_file( void *file )
     printf("Line content:");
     for( i  = 0; i < 20; i++)
     {
-        strcpy(&file[i], buffer);
+        strcpy(&file[i], buffer);//Gonna need to write to the combination file not showing up on pi
         printf("1 %s\n", buffer); // testing the buffer to insure something is being read in
         
         read(timer_fd, &num_periods, sizeof(num_periods));
