@@ -228,7 +228,11 @@ void testing_case2(info *file)//each row as a thead
     void *result = 0x0;
     pthread_t thread1[100][100];
     int i = 0, j  = 0;
+<<<<<<< HEAD
+   
+=======
     
+>>>>>>> b3cbc9042ab39f1e15a4ad352b40e6d0ab044703
     file->result = 0;
     time = clock();
     for(i = 0; i < 10 ; i++)//running each search ten times to get the average
