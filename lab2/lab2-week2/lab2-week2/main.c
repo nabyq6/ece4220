@@ -96,10 +96,13 @@ void *odd_from_file(void *file)// set to read from first.txt
     int i;
        for( i  = 0; i < 10; i++)
     {	
+	if( i > 2)
+		{
 		printf("Line Content: odd\n");	
        		 buffer[0] == '\0'; 
         	fgets(buffer, 100, file);
         //	printf("%s\n", buffer); // testing the buffer to insure something is being read in
+		}
          read(timer_fd, &num_periods, sizeof(num_periods));
         if(num_periods > 1)
         	{
@@ -132,11 +135,13 @@ void *even_from_file(void *file)//reading from the second.txt
     int i = 0;
     for( i  = 0; i < 10; i++)
     {
+	if( i > 2)
+	{
 		printf("Line Content : Even\n");
       		buffer[0] == '\0';
      		fgets(buffer, 100, file);	 
 		// printf("%s\n", buffer); // testing the buffer to insure something is being read in
-        
+        }
        		 read(timer_fd, &num_periods, sizeof(num_periods));
        	 	if(num_periods > 1)
             	{
@@ -172,12 +177,14 @@ void *write_to_file( void* file )// writing to file and buffer at this point
     printf("******************write to file begins************\n\n\n");
      for( i  = 0; i < 20; i++)
     {
+	if( i > 2)
+	{
 	pthread_mutex_lock(&mutex);
 	strcpy( song[i], buffer);
       // printf("1 %s\n", buffer); // testing the buffer to insure something is being read in
         printf("writin to buffer: %d\n", i); 
       	fprintf(file, "%s\n", buffer);
-        
+        }
 	read(timer_fd, &num_periods, sizeof(num_periods));
         if(num_periods > 1)
         	{
