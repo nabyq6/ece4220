@@ -47,16 +47,16 @@ int main(int argc, char *argv[]) {
 	RT t1;
 	t1.fp = fp1;
 	t1.buffer = buffer;
-	t1.period = 200000000;
-	t1.start = 50000000;
+	t1.period = 4000000;
+	t1.start =  7000000;
 	t1.num = 1;
 
 
 	RT t2;
 	t2.fp = fp1;
 	t2.buffer = buffer;
-	t2.period = 200000000;
-	t2.start = 150000000;
+	t2.period = 2000000;
+	t2.start =  9000000;
 	t2.num = 2;
 
 
@@ -73,7 +73,7 @@ int main(int argc, char *argv[]) {
 
 //	system("clear");
 	int i;
-	for(i = 0; i < 16; i++) {
+	for(i = 0; i < 20; i++) {
 		if(i != 15) {
 			if(strcmp(rb1.array[i], rb1.array[i+1]) == 0) {
 				continue;
@@ -103,18 +103,18 @@ void *readLine(void* t1){
 	timerfd_settime(timer_1, 0, &itval, NULL);
 	uint64_t num_periods = 0;
 	int i = 0;
-	while(1) {
+	for( i = 0;  i < 10; i++)
+	 {
 		printf("Thread %d\n", thr1->num);
-		if(fgets(thr1->buffer, 50, thr1->fp) == 0 || i > 7) {
-			return;
-		}
+		if(fgets(thr1->buffer, 50, thr1->fp) == 0 || i > 7)
 		i++;
 		read(timer_1, &num_periods, sizeof(num_periods));
 		if(num_periods > 1) {
 			puts("MISSED WINDOW\n");
 			exit(1);
 		}
-	}	
+	}
+	return;	
 }
 void *storeLine(void* rb){
 	RB *rb1 = (RB *) rb;
@@ -124,25 +124,24 @@ void *storeLine(void* rb){
 	int timer_1 = timerfd_create(CLOCK_MONOTONIC, 0);
 	struct itimerspec itval;
 	itval.it_interval.tv_sec = 0;
-	itval.it_interval.tv_nsec = 100000000;
+	itval.it_interval.tv_nsec = 2000000;
 	itval.it_value.tv_sec = 0;
-	itval.it_value.tv_nsec = 100000000;
+	itval.it_value.tv_nsec = 6000000;
 	timerfd_settime(timer_1, 0, &itval, NULL);
 	uint64_t num_periods = 0;
 	int i = 0;
-	while(1){
+	for( i = 0; i < 20; i++)
+	{
 		printf("Thread 3\n");
-		if(rb1->buffer != "" && i < 16) {
-			rb1->array[i] = malloc(sizeof(char) * 50);
-			strcpy(rb1->array[i], rb1->buffer);
-			i++;
-		} else {
-			return;
-		}
+		rb1->array[i] = malloc(sizeof(char) * 50);
+		strcpy(rb1->array[i], rb1->buffer);
+
 		read(timer_1, &num_periods, sizeof(num_periods));
-		if(num_periods > 1) {
+		if(num_periods > 1)
+		 {
 			puts("MISSED WINDOW\n");
 			exit(1);
-		}
+		}	
 	}
+ return;	
 }
