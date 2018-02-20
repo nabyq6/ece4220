@@ -169,7 +169,7 @@ void testing_case3(info *file)// each column as a thread
         {
             file->columns_to_scan = j;
             pthread_create( &thread1[0][j], NULL, running_thread3, (void *)file);
-            usleep(100);//sleeping to allow time for excution of the thread
+            usleep(1000);//sleeping to allow time for excution of the thread
         }
         for( j = 0; j < file->columns; j++)
         {
@@ -214,7 +214,7 @@ void testing_case2(info *file)//each row as a thead
         {
         file->row_to_scan = j;
         pthread_create( &thread1[j][0], NULL, running_thread2, (void *)file);
-        usleep(100);//sleeping to allow time for excution of the thread 
+        usleep(1000);//sleeping to allow time for excution of the thread 
         }
         for( j = 0; j < file->row; j++)
         {
