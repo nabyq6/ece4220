@@ -87,11 +87,12 @@ void *yellowsignal ( void *change_priority)
 	while(1)//endless loop
 	{
 		sem_wait(&sem);
+		printf("Yellow\n");
 		digitalWrite( Yellow, H);
 		sleep(2);
 		digitalWrite( Yellow, L);
 		sem_post(&sem);
-		usleep(10);
+		usleep(100);
 	}
 
 	pthread_exit(NULL);
@@ -107,11 +108,12 @@ void *greensignal ( void *change_priority)
 	while(1)//endless loop
 	{
 		sem_wait(&sem);
+		printf("Green\n");
 		digitalWrite( Green, H);
 		sleep(2);
 		digitalWrite( Green, L);
 		sem_post(&sem);
-		usleep(10);
+		usleep(100);
 	}
 
 	pthread_exit(NULL);
@@ -122,19 +124,21 @@ void *walksignal ( void *change_priority)
 {
 	int set_priority = *((int*) change_priority);
 	set_thread_priority(set_priority);
+	clear_button();
 
 	while(1)//endless loop
 	{
 		if( check_button() == 1 ) // will only work if the button has been pushed
 			{	
 				sem_wait(&sem);
+				printf("walk light/red \n");
 				digitalWrite( Red, H);
 				clear_button();
 				sleep(2);
 				digitalWrite( Red, L);
 				sem_post(&sem);
-				usleep(10);
 			}	
+			usleep(100);
 	
 	}	
 	pthread_exit(NULL);
