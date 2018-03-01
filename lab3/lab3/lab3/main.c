@@ -15,12 +15,17 @@
 #include <time.h>
 #include <pthread.h>
  // libraries only on the pie
-/*
-#include <wiringPi.h>
-#include <sys/timer.h>
-#include "ece4220lab3.c"
 
-*/
+#include <wiringPi.h>
+#include <sys/timerfd.h>
+#include "ece4220lab3.h"
+
+#define Red 8
+#define Yellow 9 
+#define Green 7
+#define Button1 27
+#define H HIGH
+#define L LOW
 
 #define MY_PRIORITY 51
 void set_thread_priority( int change_priority );
@@ -31,20 +36,46 @@ int main ( void )
     set_thread_priority(0);
     
     //Setting up the wiring pi
-    wiringPiSetupGpio();
-    pinmode( 2, OUTPUT);
-    pinmode( 2, OUTPUT);
-    pinmode( 4, OUTPUT);
-    pinmode( 5, OUTPUT);
-    pinmode( 16, INPUT);
-    pullUpDnControl( 16, PUD_DOWN); // sett button press to zero
+    wiringPiSetup();
+    pinMode( Red, OUTPUT);
+    pinMode( Yellow, OUTPUT);
+    pinMode( Green, OUTPUT);
+    pinMode( Button1, INPUT); 
+    pullUpDnControl( Button1, PUD_DOWN); // sett button press to zero
     
-    digitalWrite(2,0);// set lights to off
-    digitalWrite(3,0);
-    digitalWrite(4,0);
-    digitalWrite(5,0);
-    
-    
+    digitalWrite( Red, LOW);// set lights to off
+    digitalWrite( Yellow, LOW);
+    digitalWrite(Green, LOW);
+	
+	while( 1 ) 
+	{
+		printf( "red\n");
+		digitalWrite( Red, H);
+		sleep (5);
+		digitalWrite( Red, L);
+
+    		printf("Yellow\n");
+                digitalWrite( Yellow, H);
+	 	sleep(5);
+		digitalWrite( Yellow, L);
+	
+		printf("Green\n");
+		digitalWrite( Green, H);
+		sleep(5);
+		digitalWrite( Green, L);
+	
+		// add while loop for button push
+		if( digitalRead( Button1))
+		{
+		printf("Button has been pressed");
+		digitalWrite(Red, H);
+		sleep(5);
+		digitalWrite(Red, L);
+		
+		
+		}
+
+	}
     
     
     
