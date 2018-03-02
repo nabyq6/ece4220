@@ -35,7 +35,7 @@ int main ( void )
     // WILL NEED SUDO TO RUN WITH PRIORITY CHANGE
     set_thread_priority(0);
     
-    //Setting up the wiring pi
+    //Setting up the wiring pi and setting pinModes to be used in execution. color names are defined above
     wiringPiSetup();
     pinMode( Red, OUTPUT);
     pinMode( Yellow, OUTPUT);
@@ -43,7 +43,7 @@ int main ( void )
     pinMode( Button1, INPUT); 
     pullUpDnControl( Button1, PUD_DOWN); // sett button press to zero
     
-    digitalWrite( Red, LOW);// set lights to off
+    digitalWrite( Red, LOW);// set lights all to off- blue is not off dont worry
     digitalWrite( Yellow, LOW);
     digitalWrite(Green, LOW);
 	
@@ -64,7 +64,7 @@ int main ( void )
 		sleep(5);
 		digitalWrite( Green, L);
 	
-		// add while loop for button push
+		// check the button to see if it is being pressed. Could use check_button() to see if it was ever pressed instead 
 		if( digitalRead( Button1))
 		{
 		printf("Button has been pressed");
