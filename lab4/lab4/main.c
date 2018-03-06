@@ -31,7 +31,7 @@ int main(int argc, const char * argv[]) {
     return 0;
 }
 
-void set_thread_priority( int change_priority)//set priority for every
+void set_thread_priority( int change_priority)//set priority for every thread - reused from lab 3
 {
     struct sched_param param;
     param.sched_priority = MY_PRIORITY + change_priority;
