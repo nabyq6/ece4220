@@ -26,7 +26,8 @@
 struct gps_data_buffer{
     unsigned char gps_data;
     struct timeval location_time;
-};
+}gps_data_buffer;
+
 
 
 
@@ -51,10 +52,11 @@ int main(int argc, const char * argv[]) {
         {
             printf("error READING N_pipe1");
         }
-        location_data = read(N_pipe1, &location_data, 1 );
+        location_data = read(N_pipe1, &location_data, 1 ); // reading the pipe from GPS
         gettimeofday(&data_time, NULL);
         
-        printf("location:%d\n time:%d", data_time.time_t );
+        printf("location:%d\n time:%d", data_time.time_t );//trying to test functioning
+        
         gps_data_buffer.gps_data = location_data;
         gps_data_buffer.location_time = data_time;
     }
