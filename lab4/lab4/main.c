@@ -119,7 +119,10 @@ void *button_push_collect_time( void * input )
             collect_button_information();
         	printf("Fork worked\n");
         }
-    
+        else
+        {
+            printf("fork didnt work");
+        }
     while(1)
     {
         if(check_button() == 1)
