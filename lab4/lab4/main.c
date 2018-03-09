@@ -40,7 +40,7 @@ int main(int argc, const char * argv[]) {
    // Realtime();
    
     
-    if((pipe_to_gps = open("N_pipe1", O_RDONLY))< 0)
+    if((pipe_to_gps = open("/tmp/N_pipe1", O_RDONLY))< 0)
         {
             printf("Connection to GPS was not made - N_pipe1 error");
             exit(-1);
@@ -57,7 +57,7 @@ int main(int argc, const char * argv[]) {
         location_data = read(pipe_to_gps, &location_data, 1 ); // reading the pipe from GPS
         gettimeofday(&data_time, NULL);
         
-        printf("location:%hhu\n time:%ld",location_data, data_time.tv_sec );//trying to test functioning
+         printf("location:%hhu\n time:%ld",location_data, data_time.tv_sec );//trying to test functioning
         
         gps_data_buffer.gps_data = location_data;
         gps_data_buffer.location_time = data_time;
