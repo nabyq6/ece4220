@@ -96,7 +96,7 @@ void *button_push_collect_time( void * input )
     if( -1 == timerfd_settime( timer_fd, 0, &itval, NULL))
         {
             printf("timer failed to create for the button push\n");
-            exit(-1);
+            exit(1);
         }
        //setting up to read from the first button
        wiringPiSetup();
@@ -132,6 +132,7 @@ void *button_push_collect_time( void * input )
         
     }
        pthread_exit(NULL);
+        return pipe_setup;
 }
        
 void *collect_button_information( void *input )
@@ -144,11 +145,13 @@ void *collect_button_information( void *input )
 		 if((collect_button_information = open("/tmp/N_pip2", O_RDONLY)) < 0)
 			{
 				printf("error opening pipe in collect_ button_information\n");
+                exit(1);
 			}
 
 		if( read(collect_button_information, &collected, sizeof(collect_button_information)))
         		{
            		 printf("Error reading the information from the button press\n");
+                 exit(1);
         		}
 
         printf("reading collected_button_information occured\n");
