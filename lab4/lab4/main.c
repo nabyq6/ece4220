@@ -90,7 +90,7 @@ void *button_push_collect_time( void * input )
         itval.it_value.tv_sec = 0;// init time in seconds
         itval.it_value.tv_nsec = 75000000;// init time in nano
     
-    if( -1 == timerfd_settime( timer_fd, 0, &itval, NULL)
+    if( -1 == timerfd_settime( timer_fd, 0, &itval, NULL))
         {
             printf("timer failed to create for the button push\n");
             exit(-1);
@@ -104,19 +104,20 @@ void *button_push_collect_time( void * input )
        read( timer_fd, &num_peroids, sizeof( num_peroids));
        while(1)
     {
-       if(check_button() == 1)
-       {
-           clock_gettimeofday(&Button_time, NULL);
-           printf("Button Pressed\n");
-           fflush(stdout);
-           if(write(time_collection_pipe, &Button_time, sizeof(Button_time)) < 0)
-           {
-               printf("Error writing time to pipe in button_push_collect_time thread \n");
-           }
-           clear_button();
-        }
+        if(check_button() == 1)
+            {
+                clock_gettimeofday(&Button_time, NULL);
+                printf("Button Pressed\n");
+                fflush(stdout);
+                if(write(time_collection_pipe, &Button_time, sizeof(Button_time)) < 0)
+                {
+                    printf("Error writing time to pipe in button_push_collect_time thread \n");
+                }
+                clear_button();
+            }
         uint64_t num_periods = 0;                    //Wait one period
         read(timer_fd, &num_periods, sizeof(num_periods));
+        
     }
        pthread_exit(NULL);
 }
