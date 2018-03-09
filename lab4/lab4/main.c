@@ -34,11 +34,13 @@ struct gps_data_buffer{
 void set_thread_priority( int change_priority);
 
 int main(int argc, const char * argv[]) {
+    int pipe_to_gps; //for pipe from GPS exe.
     unsigned char location_data;
     struct timeval data_time;
-    Realtime();
+   // Realtime();
+   
     
-    if(pipe(N_pipe1) < 0)
+    if((pipe_to_gps = open("N_pipe1", O_RDONLY))< 0)
         {
             printf("Connection to GPS was not made - N_pipe1 error");
             exit(-1);
@@ -48,14 +50,14 @@ int main(int argc, const char * argv[]) {
     
     while(1)
     {
-        if( read(N_pipe1, &location_data, 1 ) < 0)
+        if( read(pipe_to_gps, &location_data, 1 ) < 0)
         {
             printf("error READING N_pipe1");
         }
-        location_data = read(N_pipe1, &location_data, 1 ); // reading the pipe from GPS
+        location_data = read(pipe_to_gps, &location_data, 1 ); // reading the pipe from GPS
         gettimeofday(&data_time, NULL);
         
-        printf("location:%d\n time:%d", data_time.time_t );//trying to test functioning
+        printf("location:%hhu\n time:%ld",location_data, data_time.tv_sec );//trying to test functioning
         
         gps_data_buffer.gps_data = location_data;
         gps_data_buffer.location_time = data_time;
@@ -64,7 +66,8 @@ int main(int argc, const char * argv[]) {
     
 }
 
-void set_thread_priority( int change_priority)//set priority for every thread - reused from lab 3
+/*
+ void set_thread_priority( int change_priority)//set priority for every thread - reused from lab 3
 {
     struct sched_param param;
     param.sched_priority = MY_PRIORITY + change_priority;
@@ -75,3 +78,4 @@ void set_thread_priority( int change_priority)//set priority for every thread - 
     }
     
 }
+ */
