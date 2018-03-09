@@ -103,7 +103,7 @@ void *button_push_collect_time( void * input )
        pinMode( Button1, INPUT);
        pullUpDnControl( Button1, PUD_DOWN);
        
-       uint64_t num_peroids = 0;
+       uint64_t num&peroids = 0;
        read( timer_fd, &num_peroids, sizeof( num_peroids));
 	
 	pipe_setup = system("mkfifo /tmp/N_pipe2");
@@ -127,8 +127,8 @@ void *button_push_collect_time( void * input )
                 }
                 clear_button();
             }
-        uint64_t num_periods = 0;                    //Wait one period
-        read(timer_fd, &num_periods, sizeof(num_periods));
+        //uint64_t num_periods = 0;                    //Wait one period
+       // read(timer_fd, &num_periods, sizeof(num_periods));
         
     }
        pthread_exit(NULL);
@@ -138,7 +138,7 @@ void *collect_button_information( void *input )
     {
         int collect_button_information;//= *((int*)input);
         set_thread_priority(10);
-        struct timespec collected, pipe_setup;
+        struct timespec collected;
         printf("Reading from the button press\n");
        
 		 if((collect_button_information = open("/tmp/N_pip2", O_RDONLY)) < 0)
