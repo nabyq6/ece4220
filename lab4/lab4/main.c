@@ -33,7 +33,7 @@ struct gps_data_buffer{
 
 void set_thread_priority( int change_priority);
 void *button_push_collect_time( void * input );
-void *collect_button_information(void * input);
+void collect_button_information();// tired to runs as a sperate process by using a fork
 
 //define GPIO ports
 #define Button1 27
@@ -44,7 +44,6 @@ int main(int argc, const char * argv[]) {
     struct timeval data_time;
    // Realtime();
     pthread_t check_button_press, read_time_information;
-    int N_pipe2;//file descriptor 
     
     if((pipe_to_gps = open("/tmp/N_pipe1", O_RDONLY))< 0)
         {
@@ -96,25 +95,32 @@ void *button_push_collect_time( void * input )
     if( -1 == timerfd_settime( timer_fd, 0, &itval, NULL))
         {
             printf("timer failed to create for the button push\n");
-            exit(1);
+            exit(-1);
         }
        //setting up to read from the first button
        wiringPiSetup();
        pinMode( Button1, INPUT);
        pullUpDnControl( Button1, PUD_DOWN);
        
-       uint64_t num&peroids = 0;
+       uint64_t num_peroids = 0;
        read( timer_fd, &num_peroids, sizeof( num_peroids));
 	
 	pipe_setup = system("mkfifo /tmp/N_pipe2");
 	
 	if(( time_collection_pipe = open("/tmp/N_pipe2", O_WRONLY)) < 0)
 		{
-			printf("error opening pipe in button__pussh_collect_time thread\n");
+			printf("error opening pipe in button_push_collect_time thread\n");
+            exit(-1);
 		}
-
-	printf("button push_collect_time pipe setup\n");
-       while(1)
+    
+        pid_t pid = fork();//forking to run a seperate proccess to have the buttons press piped to it
+        if( pid == 0 )
+        {
+            collect_button_information();
+        	printf("Fork worked\n");
+        }
+    
+    while(1)
     {
         if(check_button() == 1)
             {
@@ -124,6 +130,7 @@ void *button_push_collect_time( void * input )
                 if(write(time_collection_pipe, &Button_time, sizeof(Button_time)) < 0)
                 {
                     printf("Error writing time to pipe in button_push_collect_time thread \n");
+                    exit(-1);
                 }
                 clear_button();
             }
@@ -132,26 +139,25 @@ void *button_push_collect_time( void * input )
         
     }
        pthread_exit(NULL);
-        return pipe_setup;
 }
        
-void *collect_button_information( void *input )
+void collect_button_information( void )
     {
         int collect_button_information;//= *((int*)input);
-        set_thread_priority(10);
+        //set_thread_priority(10); should need to set a thread priority 
         struct timespec collected;
         printf("Reading from the button press\n");
        
 		 if((collect_button_information = open("/tmp/N_pip2", O_RDONLY)) < 0)
 			{
 				printf("error opening pipe in collect_ button_information\n");
-                exit(1);
+                exit(-1);
 			}
 
 		if( read(collect_button_information, &collected, sizeof(collect_button_information)))
         		{
            		 printf("Error reading the information from the button press\n");
-                 exit(1);
+                 exit(-1);
         		}
 
         printf("reading collected_button_information occured\n");
