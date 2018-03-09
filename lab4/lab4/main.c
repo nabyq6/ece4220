@@ -14,12 +14,12 @@
 #include <stdint.h>
 #include <sys/time.h>
 #include <pthread.h>
-/* included and works only on the pi
+// included and works only on the pi
 #include <wiringPi.h>
 #include <semaphore.h>
 #include <sys/timerfd.h>
-#include "serial_ece4220.h"
- */
+#include "ece4220lab3.h"
+ 
 
 #define MY_PRIORITY 51
 
@@ -43,7 +43,7 @@ int main(int argc, const char * argv[]) {
     struct timeval data_time;
    // Realtime();
     pthread_t check_button_press;
-    int time_collection_pipe;
+    int N_pipe2;//file descriptor 
     
     if((pipe_to_gps = open("/tmp/N_pipe1", O_RDONLY))< 0)
         {
@@ -51,7 +51,7 @@ int main(int argc, const char * argv[]) {
             exit(-1);
         }
     
-    printf("Connection to GPS device was successful");//only if both progarms are running at
+    printf("Connection to GPS device was successful\n");//only if both progarms are running at
     
     pthread_create(&check_button_press, NULL, &button_push_collect_time, NULL);
     
@@ -82,7 +82,7 @@ void *button_push_collect_time( void * input )
     struct timeval Button_time;
     int time_collection_pipe;
     
-    int timer_fd = timer_fdcreate(CLOCK_MONOTONIC, 0);
+    int timer_fd = timerfd_create(CLOCK_MONOTONIC, 0);
     
     struct itimerspec itval;// setting timer to run thread every 75ms
         itval.it_interval.tv_sec = 1; //Period_seconds
@@ -102,11 +102,17 @@ void *button_push_collect_time( void * input )
        
        uint64_t num_peroids = 0;
        read( timer_fd, &num_peroids, sizeof( num_peroids));
+
+	if(( time_collection_pipe = open("/tmp/N_pip2", O_WRONLY)) < 0)
+		{
+			printf("error opening pipe in button__pussh_collect_time thread\n");
+		}
+
        while(1)
     {
         if(check_button() == 1)
             {
-                clock_gettimeofday(&Button_time, NULL);
+                gettimeofday(&Button_time, NULL);
                 printf("Button Pressed\n");
                 fflush(stdout);
                 if(write(time_collection_pipe, &Button_time, sizeof(Button_time)) < 0)
@@ -124,14 +130,21 @@ void *button_push_collect_time( void * input )
        
 void *collect_button_information( void *input )
     {
-        int collect_button_information= *((int*)input);
+        int collect_button_information;//= *((int*)input);
         set_thread_priority(10);
         struct timespec collected;
         printf("Reading from the button press");
-        if( read(collect_button_information, &collected, sizeof(collect_button_information)))
-        {
-            printf("Error reading the information from the button press");
-        }
+       	
+		 if((collect_button_information = open("/tmp/N_pip2", O_RDONLY)) < 0)
+			{
+				printf("error opening pipe in collect_ button_information");
+			}
+
+		if( read(collect_button_information, &collected, sizeof(collect_button_information)))
+        		{
+           		 printf("Error reading the information from the button press");
+        		}
+
         printf("reading collected_button_information occured");
         
         pthread_exit(NULL);
