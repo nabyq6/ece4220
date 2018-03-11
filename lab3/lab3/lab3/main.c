@@ -49,7 +49,10 @@ int main ( void )
 	
 	while( 1 ) 
 	{
+<<<<<<< HEAD
 
+=======
+>>>>>>> 8c26766af8795072e1da35c4cbbfb419a93e5298
     		printf("Yellow\n");
                 digitalWrite( Yellow, H);
 	 	sleep(5);
@@ -60,7 +63,11 @@ int main ( void )
 		sleep(5);
 		digitalWrite( Green, L);
 	
+<<<<<<< HEAD
 		// check the button to see if it is being pressed. Could use check_button() to see if it was ever pressed instead 
+=======
+		// check the button to see if it is being pressed. Could use check_button() to see if it was ever pressed instead
+>>>>>>> 8c26766af8795072e1da35c4cbbfb419a93e5298
 
 		if( check_button() == 1) 
 		{
@@ -69,7 +76,12 @@ int main ( void )
 		sleep(5);
 		clear_button();
 		digitalWrite(Red, L);
+<<<<<<< HEAD
 
+=======
+            clear_button();:wq
+            
+>>>>>>> 8c26766af8795072e1da35c4cbbfb419a93e5298
 		}
 
 	}
