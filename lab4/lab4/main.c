@@ -32,8 +32,8 @@ struct gps_data_buffer{
 
 
 void set_thread_priority( int change_priority);
-void *button_push_collect_time( void * input );
-void collect_button_information();// tired to runs as a sperate process by using a fork
+//void *button_push_collect_time( void * input );
+void *collect_button_information(void * inputs);// tired to runs as a sperate process by using a fork
 
 //define GPIO ports
 #define Button1 27
@@ -53,8 +53,8 @@ int main(int argc, const char * argv[]) {
     
     printf("Connection to GPS device was successful\n");//only if both progarms are running at
     
-    	pthread_create(&check_button_press, NULL, &button_push_collect_time, NULL);
-//	pthread_create(&read_time_information, NULL, &collect_button_information, NULL);
+ //   	pthread_create(&check_button_press, NULL, &button_push_collect_time, NULL);
+	pthread_create(&read_time_information, NULL, &collect_button_information, NULL);
     
    	 while(1)
    	 {
@@ -62,23 +62,23 @@ int main(int argc, const char * argv[]) {
        	 	{
        	   	  printf("error READING N_pipe1");
         	}
-        	location_data = read(pipe_to_gps, &location_data, 1 ); // reading the pipe from GPS
+        	 read(pipe_to_gps, &location_data, 1 ); // reading the pipe from GPS
         	gettimeofday(&data_time, NULL);
         
-        	 printf("location:%hhu\n time:%ld",location_data, data_time.tv_sec );//trying to test functioning
+        	 printf("location:%hhu time:%ld\n",location_data, data_time.tv_sec );//trying to test functioning
         
         	gps_data_buffer.gps_data = location_data;
         	gps_data_buffer.location_time = data_time;
     	}
    
-    	pthread_join( check_button_press, NULL);
-//	pthread_join( read_time_information, NULL);
+//    	pthread_join( check_button_press, NULL);
+	pthread_join( read_time_information, NULL);
    
     return 0;
     
 }
 
-void *button_push_collect_time( void * input )
+/*void *button_push_collect_time( void * input )
 {
     set_thread_priority(5);//hard cording thread prioirty to be 55
     struct timeval Button_time;
@@ -144,13 +144,16 @@ void *button_push_collect_time( void * input )
     }
        pthread_exit(NULL);
 }
-       
-void collect_button_information( void )
+*/      
+void *collect_button_information( void * input)
     {
         set_thread_priority(5);
 	int collect_button_information;//= *((int*)input);
         //set_thread_priority(10); should need to set a thread priority 
         struct timespec collected;
+	//if you really forgot a while loop your a dumby 
+	while (1)
+	{
         printf("Reading from the button press\n");
        
 		 if((collect_button_information = open("N_pipe2", O_RDONLY)) < 0)
@@ -159,14 +162,15 @@ void collect_button_information( void )
                 exit(-1);
 			}
 
-		if( read(collect_button_information, &collected, sizeof(collect_button_information)))
+		if( read(collect_button_information, &collected, sizeof(collected)) < 0)
         		{
            		 printf("Error reading the information from the button press\n");
                  exit(-1);
         		}
 
         printf("reading collected_button_information occured\n");
-        
+        }
+
         pthread_exit(NULL);
     }
  void set_thread_priority( int change_priority)//set priority for every thread - reused from lab 3
