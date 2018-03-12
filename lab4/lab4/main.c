@@ -28,20 +28,35 @@ struct gps_data_buffer{
     struct timeval location_time;
 }gps_data_buffer;
 
+struct loaded{
+    unsigned char gps_data;
+    struct timeval location_time;
+}loaded;
 
+struct event_buffer
+{
+	double location_before;
+	double location_of_event;
+	double location_after;
+	double time_before;
+	double time_of_event;
+	double time_after;
+}event_buffer;
 
 
 void set_thread_priority( int change_priority);
 //void *button_push_collect_time( void * input );
 void *collect_button_information(void * inputs);// tired to runs as a sperate process by using a fork
+void *calculate_event( void * event);//thread for getting each event data
 
 //define GPIO ports
 #define Button1 27
 
 int main(int argc, const char * argv[]) {
-    int pipe_to_gps; //for pipe from GPS exe.
-    unsigned char location_data;
-    struct timeval data_time;
+    int pipe_to_gps; //for pipe from GPS exec.
+	struct loaded;
+  //  unsigned char location_data;
+  //  struct timeval data_time;
    // Realtime();
     pthread_t check_button_press, read_time_information;
     
@@ -58,17 +73,17 @@ int main(int argc, const char * argv[]) {
     
    	 while(1)
    	 {
-        	if( read(pipe_to_gps, &location_data, 1 ) < 0)
+        	if( read(pipe_to_gps, &loaded.gps_data, 1 ) < 0)
        	 	{
        	   	  printf("error READING N_pipe1");
         	}
-        	 read(pipe_to_gps, &location_data, 1 ); // reading the pipe from GPS
-        	gettimeofday(&data_time, NULL);
+		 read(pipe_to_gps, &loaded.gps_data, 1 ); // reading the pipe from GPS
+        	gettimeofday(&loaded.location_time, NULL);
         
-        	 printf("location:%hhu time:%ld\n",location_data, data_time.tv_sec );//trying to test functioning
+        //	 printf("location:%hhu time:%ld\n",location_data, data_time.tv_sec );//trying to test functioning
         
-        	gps_data_buffer.gps_data = location_data;
-        	gps_data_buffer.location_time = data_time;
+        	gps_data_buffer.gps_data = loaded.gps_data;
+        	gps_data_buffer.location_time = loaded.location_time;
     	}
    
 //    	pthread_join( check_button_press, NULL);
@@ -150,8 +165,10 @@ void *collect_button_information( void * input)
         set_thread_priority(5);
 	int collect_button_information;//= *((int*)input);
         //set_thread_priority(10); should need to set a thread priority 
-        struct timespec collected;
+        struct timeval collected;
 	//if you really forgot a while loop your a dumby 
+	pthread_t event;
+
 	while (1)
 	{
         printf("Reading from the button press\n");
@@ -167,12 +184,48 @@ void *collect_button_information( void * input)
            		 printf("Error reading the information from the button press\n");
                  exit(-1);
         		}
+	//dynamicall creating a thread 
+	pthread_create(&event, NULL, &calculate_event,(void*)&collected);
+	pthread_detach(event);	
 
         printf("reading collected_button_information occured\n");
         }
 
         pthread_exit(NULL);
     }
+
+void *calculate_event( void * event )
+{	// one confusing thing to follow 
+	set_thread_priority(5);
+	struct gps_data_buffer before_event = gps_data_buffer;
+	struct timeval event_time = *(struct timeval*) event;
+	struct gps_data_buffer after_event;
+	struct event_buffer current_event;
+	while( before_event.gps_data  == gps_data_buffer.gps_data);
+
+		
+	printf("calculating the event data\n");
+	after_event.gps_data = (double) loaded.gps_data;
+	after_event.location_time = loaded.location_time;
+
+	current_event.time_before = (double) before_event.location_time.tv_sec + ((double) before_event.location_time.tv_usec/1000);
+	current_event.time_of_event = (double) event_time.tv_sec + ((double) event_time.tv_usec/1000);
+	printf("time of even %f\n", current_event.time_of_event);
+	current_event.time_after = (double) after_event.location_time.tv_sec + ((double) after_event.location_time.tv_usec/1000);
+	
+	current_event.location_before = (double) before_event.gps_data;
+	current_event.location_after = (double) after_event.gps_data;
+	current_event.location_of_event = (double) (((current_event.time_of_event - current_event.time_before)/(current_event.time_after - current_event.time_before))*(current_event.location_after - current_event.location_before)) + current_event.location_before;
+
+	printf("location_before: %f time of event:%f\n ", current_event.location_before, current_event.time_before);
+	printf("location of event %f, time of event%f \n" , current_event.location_of_event, current_event.time_of_event);
+	printf("Location after: %f,  time of event %f \n", current_event.location_after, current_event.time_after);
+	
+	
+
+
+	pthread_exit(NULL);
+}
  void set_thread_priority( int change_priority)//set priority for every thread - reused from lab 3
 {
     struct sched_param param;
