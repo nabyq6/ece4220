@@ -1,26 +1,30 @@
-//
-//  main.c
-//  test
-//
-//  Created by Nicholas Bouckaert on 3/8/18.
-//  Copyright © 2018 Nicholas Bouckaert. All rights reserved.
-//
-
+#include <time.h>
+#include <sys/time.h>
+#include <stdlib.h>
 #include <stdio.h>
 
-int main(void)
+int main(int argc, char **argv)
 {
-    int a;
-    a = fork();
-    if( a == 0)
+    if (argc < 2)
     {
-        a = fork();
+        printf("USAGE: %s loop-iterations\n", argv[0]);
+        return 1;
     }
     
+    int iterations = atoi(argv[1]);
     
-    a = fork();
-    if( a != 0 )
-        printf("(ID: %d) Hello world\n", a);
+    struct timeval start, end;
+    
+    gettimeofday(&start, NULL);
+    
+    for (int i = 0; i < iterations; i++)
+    {
+    }
+    
+    gettimeofday(&end, NULL);
+    
+    printf("%ld\n", ((end.tv_sec * 1000000 + end.tv_usec)
+                     - (start.tv_sec * 1000000 + start.tv_usec)));
     
     return 0;
 }
