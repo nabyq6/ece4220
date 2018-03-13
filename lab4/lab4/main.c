@@ -48,7 +48,7 @@
 	//void *button_push_collect_time( void * input );
 	void *collect_button_information(void * inputs);// tired to runs as a sperate process by using a fork
 	void *calculate_event( void * event);//thread for getting each event data
-
+	void *print_through_pipe( void *current_event);// receives the information through a pipe
 	//define GPIO ports
 	#define Button1 27
 
@@ -58,7 +58,7 @@
 	  //  unsigned char location_data;
 	   // struct timeval data_time;
 	   // Realtime();
-	    pthread_t check_button_press, read_time_information;
+	    pthread_t check_button_press, pipe_print;
 	    set_thread_priority(15);
 	    if((pipe_to_gps = open("/tmp/N_pipe1", O_RDONLY))< 0)
 		{
@@ -70,6 +70,7 @@
 	    
 	 //   	pthread_create(&check_button_press, NULL, &button_push_collect_time, NULL);
 		pthread_create(&read_time_information, NULL, &collect_button_information, NULL);
+		pthread_create(&pipe_print, NULL, &print_through_pipe, NULL);
 	    
 		 while(1)
 		 {
@@ -88,6 +89,7 @@
 	   
 	//    	pthread_join( check_button_press, NULL);
 		pthread_join( read_time_information, NULL);
+		pthread_join( pipe_print, NULL);
 	   
 	    return 0;
 	    
@@ -207,6 +209,8 @@ void *calculate_event( void * event )
 	struct timeval event_time = *(struct timeval*) event;
 	struct gps_data_buffer after_event;
 	struct event_buffer current_event;
+	int pipe_for_bonus;
+
 //	printf("data locaiton %d\n ", (int) gps_data_buffer.gps_data); used for error checking the double increment 
 	while( before_event.gps_data  == gps_data_buffer.gps_data)
 	{
@@ -226,16 +230,54 @@ void *calculate_event( void * event )
 	current_event.location_before = (double) before_event.gps_data;
 	current_event.location_after = (double) after_event.gps_data;
 	current_event.location_of_event = (double) (((current_event.time_of_event - current_event.time_before)/(current_event.time_after - current_event.time_before))*(current_event.location_after - current_event.location_before)) + current_event.location_before;
-
+/*
 	printf("location_before: %f time of event:%f\n ", current_event.location_before, current_event.time_before);
 	printf("location of event %f, time of event%f \n" , current_event.location_of_event, current_event.time_of_event);
 	printf("Location after: %f,  time of event %f \n", current_event.location_after, current_event.time_after);
-	
-	
+*/	
+	if((pipe_for_bonus= open("N_pipe3", O_WRONLY)) < 0)
+				{
+					printf("error opening pipe in collect_ button_information\n");
+			exit(-1);
+				}
+
+	while (1)
+	{       
+		i++;
+		if( write(pipe_for_bonus, &current_event, sizeof(current_event)) < 0)
+        		{
+           		 printf("Error reading the information from the button press\n");
+                 exit(-1);
+        		}
 
 
 	pthread_exit(NULL);
 }
+//Adding the bonus here 
+void *print_through_pipe( void *current event)
+{
+	struct event_buffer current_event
+	if((pipe_for_bonus = open("N_pipe3", O_RDONLY)) < 0)
+				{
+					printf("error opening pipe in collect_ button_information\n");
+					exit(-1);
+				}
+
+	while (1)
+	{       
+		i++;
+		if( read( pipe_for_bonus, &current_event, sizeof(current_event)) < 0)
+        		{
+           		 printf("Error reading the information from the button press\n");
+               		  exit(-1);
+        		}
+	printf("printing from the piped connect:\n");
+	printf("location_before: %f time of event:%f\n ", current_event.location_before, current_event.time_before);
+	printf("location of event %f, time of event%f \n" , current_event.location_of_event, current_event.time_of_event);
+	printf("Location after: %f,  time of event %f \n", current_event.location_after, current_event.time_after);
+	
+	}
+}		
  void set_thread_priority( int change_priority)//set priority for every thread - reused from lab 3
 {
     struct sched_param param;
