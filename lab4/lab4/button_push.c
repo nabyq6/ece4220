@@ -37,10 +37,10 @@ set_thread_priority(5);//hard cording thread prioirty to be 55
     int timer_fd = timerfd_create(CLOCK_MONOTONIC, 0);
     
     struct itimerspec itval;// setting timer to run thread every 75ms
-        itval.it_interval.tv_sec = 1; //Period_seconds
-        itval.it_interval.tv_nsec = 0;//peroid in nano
+        itval.it_interval.tv_sec = 0; //Period_seconds
+        itval.it_interval.tv_nsec = 75000000;//peroid in nano
         itval.it_value.tv_sec = 0;// init time in seconds
-        itval.it_value.tv_nsec = 75000000;// init time in nano
+        itval.it_value.tv_nsec = 1;// init time in nano
     
 	 timerfd_settime( timer_fd, 0, &itval, NULL);
 
@@ -74,8 +74,8 @@ set_thread_priority(5);//hard cording thread prioirty to be 55
                 }
                 clear_button();
             }
-        //uint64_t num_periods = 0;                    //Wait one period
-       // read(timer_fd, &num_periods, sizeof(num_periods));
+        uint64_t num_periods = 0;                    //Wait one period
+        read(timer_fd, &num_periods, sizeof(num_periods));
         
     }
      return 0;
