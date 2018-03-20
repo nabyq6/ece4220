@@ -67,7 +67,12 @@ int pipe_for_bonus[2];
 		    printf("Connection to GPS was not made - N_pipe1 error\n");
 		    exit(-1);
 		}
-	    
+        ---------- trying to get bonus-----
+        if(pipe(pipe_p)<0){
+            printf("Pipe Creation Error\n");
+            exit(-1);
+        }
+-------------
 	    printf("Connection to GPS device was successful\n");//only if both progarms are running at
 	    
 	 //   	pthread_create(&check_button_press, NULL, &button_push_collect_time, NULL);
