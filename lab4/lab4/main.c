@@ -176,7 +176,7 @@ int pipe_for_bonus[2];
 		//set_thread_priority(10); should need to set a thread priority 
 		struct timeval collected;
 		//if you really forgot a while loop your a dumby 
-		pthread_t event[10];
+		pthread_t event[10], print_via_pipe;
 		int i;
 
 		 printf("Reading from the button press setup\n");
@@ -188,8 +188,7 @@ int pipe_for_bonus[2];
 				}
 
 	while (1)
-	{       
-		i++;
+	{
 		if( read(collect_button_information, &collected, sizeof(collected)) < 0)
         		{
            		 printf("Error reading the information from the button press\n");
@@ -197,6 +196,7 @@ int pipe_for_bonus[2];
         		}
 	//dynamicall creating a thread 
 	pthread_create(&event[i], NULL, &calculate_event,(void*)&collected);
+    pthread_create(&print_via_pipe, NULL, &print_through_pipe, NULL);//***** bonus
 	pthread_detach(event[i]);	
 	if( i == 9)
 	{
@@ -248,8 +248,7 @@ void *calculate_event( void * event )
 			exit(-1);
 	*/			}
 
-	while (1)
-	{       
+
 		
 		if( write(pipe_for_bonus[1], &current_event, sizeof(current_event)) < 0)
         		{
@@ -259,21 +258,22 @@ void *calculate_event( void * event )
 
 
 	pthread_exit(NULL);
-    }
+
 }
 
 //Adding the bonus here 
 void *print_through_pipe( void *current_event)
 {
-	struct event_buffer current_event
+    struct event_buffer current_event;
 	/*if((pipe_for_bonus = open("N_pipe3", O_RDONLY)) < 0)
 				{
 					printf("error opening pipe in collect_ button_information\n");
 					exit(-1);
 				}
      */
-	while (1)
-	{
+    printf("****pipe connection for printing setup****\n");
+	while(1)
+    {
 		if( read( pipe_for_bonus[0], &current_event, sizeof(current_event)) < 0)
         		{
            		 printf("Error reading the information from the button press\n");
@@ -283,8 +283,7 @@ void *print_through_pipe( void *current_event)
 	printf("location_before: %f time of event:%f\n ", current_event.location_before, current_event.time_before);
 	printf("location of event %f, time of event%f \n" , current_event.location_of_event, current_event.time_of_event);
 	printf("Location after: %f,  time of event %f \n", current_event.location_after, current_event.time_after);
-	
-	}
+    }
 }		
  void set_thread_priority( int change_priority)//set priority for every thread - reused from lab 3
 {
