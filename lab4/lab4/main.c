@@ -237,11 +237,11 @@ void *calculate_event( void * event )
 	printf("location of event %f, time of event%f \n" , current_event.location_of_event, current_event.time_of_event);
 	printf("Location after: %f,  time of event %f \n", current_event.location_after, current_event.time_after);
 */	
-	if((pipe_for_bonus= open("N_pipe3", O_WRONLY)) < 0)
+	/*if((pipe_for_bonus= open("N_pipe3", O_WRONLY)) < 0)
 				{
 					printf("error opening pipe in collect_ button_information\n");
 			exit(-1);
-				}
+	*/			}
 
 	while (1)
 	{       
