@@ -60,7 +60,7 @@ int pipe_for_bonus[2];
 	  //  unsigned char location_data;
 	   // struct timeval data_time;
 	   // Realtime();
-	    pthread_t check_button_press, pipe_print;
+	    pthread_t check_button_press, pipe_print, read_time_information;
 	    set_thread_priority(15);
 	    if((pipe_to_gps = open("/tmp/N_pipe1", O_RDONLY))< 0)
 		{
@@ -211,7 +211,7 @@ void *calculate_event( void * event )
 	struct timeval event_time = *(struct timeval*) event;
 	struct gps_data_buffer after_event;
 	struct event_buffer current_event;
-	int pipe_for_bonus;
+	//int pipe_for_bonus;
 
 //	printf("data locaiton %d\n ", (int) gps_data_buffer.gps_data); used for error checking the double increment 
 	while( before_event.gps_data  == gps_data_buffer.gps_data)
@@ -245,7 +245,7 @@ void *calculate_event( void * event )
 
 	while (1)
 	{       
-		i++;
+		
 		if( write(pipe_for_bonus[1], &current_event, sizeof(current_event)) < 0)
         		{
            		 printf("Error reading the information from the button press\n");
@@ -254,7 +254,9 @@ void *calculate_event( void * event )
 
 
 	pthread_exit(NULL);
+    }
 }
+
 //Adding the bonus here 
 void *print_through_pipe( void *current event)
 {
@@ -266,8 +268,7 @@ void *print_through_pipe( void *current event)
 				}
      */
 	while (1)
-	{       
-		i++;
+	{
 		if( read( pipe_for_bonus[0], &current_event, sizeof(current_event)) < 0)
         		{
            		 printf("Error reading the information from the button press\n");
