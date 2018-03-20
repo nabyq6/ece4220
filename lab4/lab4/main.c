@@ -258,7 +258,7 @@ void *calculate_event( void * event )
 }
 
 //Adding the bonus here 
-void *print_through_pipe( void *current event)
+void *print_through_pipe( void *current_event)
 {
 	struct event_buffer current_event
 	/*if((pipe_for_bonus = open("N_pipe3", O_RDONLY)) < 0)
