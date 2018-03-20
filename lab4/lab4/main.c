@@ -68,7 +68,7 @@ int pipe_for_bonus[2];
 		    exit(-1);
 		}
         ---------- trying to get bonus-----
-        if(pipe(pipe_p)<0){
+        if(pipe(pipe_for_bonus)<0){
             printf("Pipe Creation Error\n");
             exit(-1);
         }
@@ -280,9 +280,9 @@ void *print_through_pipe( void *current_event)
                		  exit(-1);
         		}
 	printf("printing from the piped connect:\n");
-	printf("location_before: %f time of event:%f\n ", current_event.location_before, current_event.time_before);
-	printf("location of event %f, time of event%f \n" , current_event.location_of_event, current_event.time_of_event);
-	printf("Location after: %f,  time of event %f \n", current_event.location_after, current_event.time_after);
+        printf("location_before: %lf , time of event:%lf\n ", current_event.location_before, current_event.time_before);
+        printf("location of event %lf , time of event: %lf \n" , current_event.location_of_event, current_event.time_of_event);
+        printf("Location after: %lf,  time of event: %lf \n", current_event.location_after, current_event.time_after);
     }
 }		
  void set_thread_priority( int change_priority)//set priority for every thread - reused from lab 3
