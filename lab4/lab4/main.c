@@ -50,7 +50,7 @@ int pipe_for_bonus[2];
 	//void *button_push_collect_time( void * input );
 	void *collect_button_information(void * inputs);// tired to runs as a sperate process by using a fork
 	void *calculate_event( void * event);//thread for getting each event data
-	void *print_through_pipe( void *current_event);// receives the information through a pipe
+	void *print_through_pipe( void *cevent);// receives the information through a pipe
 	//define GPIO ports
 	#define Button1 27
 
@@ -67,12 +67,12 @@ int pipe_for_bonus[2];
 		    printf("Connection to GPS was not made - N_pipe1 error\n");
 		    exit(-1);
 		}
-        ---------- trying to get bonus-----
+//        ---------- trying to get bonus-----
         if(pipe(pipe_for_bonus)<0){
             printf("Pipe Creation Error\n");
             exit(-1);
         }
--------------
+//-------------
 	    printf("Connection to GPS device was successful\n");//only if both progarms are running at
 	    
 	 //   	pthread_create(&check_button_press, NULL, &button_push_collect_time, NULL);
@@ -246,8 +246,8 @@ void *calculate_event( void * event )
 				{
 					printf("error opening pipe in collect_ button_information\n");
 			exit(-1);
-	*/			}
-
+		}
+*/
 
 		
 		if( write(pipe_for_bonus[1], &current_event, sizeof(current_event)) < 0)
@@ -262,7 +262,7 @@ void *calculate_event( void * event )
 }
 
 //Adding the bonus here 
-void *print_through_pipe( void *current_event)
+void *print_through_pipe( void *cevent)
 {
     struct event_buffer current_event;
 	/*if((pipe_for_bonus = open("N_pipe3", O_RDONLY)) < 0)
