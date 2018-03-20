@@ -43,6 +43,8 @@
 		double time_after;
 	}event_buffer;
 
+int pipe_for_bonus[2];
+
 
 	void set_thread_priority( int change_priority);
 	//void *button_push_collect_time( void * input );
@@ -244,7 +246,7 @@ void *calculate_event( void * event )
 	while (1)
 	{       
 		i++;
-		if( write(pipe_for_bonus, &current_event, sizeof(current_event)) < 0)
+		if( write(pipe_for_bonus[1], &current_event, sizeof(current_event)) < 0)
         		{
            		 printf("Error reading the information from the button press\n");
                  exit(-1);
@@ -257,16 +259,16 @@ void *calculate_event( void * event )
 void *print_through_pipe( void *current event)
 {
 	struct event_buffer current_event
-	if((pipe_for_bonus = open("N_pipe3", O_RDONLY)) < 0)
+	/*if((pipe_for_bonus = open("N_pipe3", O_RDONLY)) < 0)
 				{
 					printf("error opening pipe in collect_ button_information\n");
 					exit(-1);
 				}
-
+     */
 	while (1)
 	{       
 		i++;
-		if( read( pipe_for_bonus, &current_event, sizeof(current_event)) < 0)
+		if( read( pipe_for_bonus[0], &current_event, sizeof(current_event)) < 0)
         		{
            		 printf("Error reading the information from the button press\n");
                		  exit(-1);
