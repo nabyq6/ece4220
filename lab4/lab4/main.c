@@ -50,7 +50,7 @@ int pipe_for_bonus[2];
 	//void *button_push_collect_time( void * input );
 	void *collect_button_information(void * inputs);// tired to runs as a sperate process by using a fork
 	void *calculate_event( void * event);//thread for getting each event data
-	void *print_through_pipe( void *current_event);// receives the information through a pipe
+	void *print_through_pipe( void *cevent);// receives the information through a pipe
 	//define GPIO ports
 	#define Button1 27
 
@@ -232,19 +232,18 @@ void *calculate_event( void * event )
 	current_event.location_before = (double) before_event.gps_data;
 	current_event.location_after = (double) after_event.gps_data;
 	current_event.location_of_event = (double) (((current_event.time_of_event - current_event.time_before)/(current_event.time_after - current_event.time_before))*(current_event.location_after - current_event.location_before)) + current_event.location_before;
-/*
+
 	printf("location_before: %f time of event:%f\n ", current_event.location_before, current_event.time_before);
 	printf("location of event %f, time of event%f \n" , current_event.location_of_event, current_event.time_of_event);
 	printf("Location after: %f,  time of event %f \n", current_event.location_after, current_event.time_after);
-*/	
+	
 	/*if((pipe_for_bonus= open("N_pipe3", O_WRONLY)) < 0)
 				{
 					printf("error opening pipe in collect_ button_information\n");
 			exit(-1);
-	*/			}
+				}
 
-	while (1)
-	{       
+     
 		
 		if( write(pipe_for_bonus[1], &current_event, sizeof(current_event)) < 0)
         		{
@@ -252,23 +251,20 @@ void *calculate_event( void * event )
                  exit(-1);
         		}
 
-
+*/
 	pthread_exit(NULL);
-    }
 }
 
 //Adding the bonus here 
-void *print_through_pipe( void *current_event)
+void *print_through_pipe( void *cevent)
 {
-	struct event_buffer current_event
+	struct event_buffer current_event;
 	/*if((pipe_for_bonus = open("N_pipe3", O_RDONLY)) < 0)
 				{
 					printf("error opening pipe in collect_ button_information\n");
 					exit(-1);
 				}
      */
-	while (1)
-	{
 		if( read( pipe_for_bonus[0], &current_event, sizeof(current_event)) < 0)
         		{
            		 printf("Error reading the information from the button press\n");
@@ -279,7 +275,7 @@ void *print_through_pipe( void *current_event)
 	printf("location of event %f, time of event%f \n" , current_event.location_of_event, current_event.time_of_event);
 	printf("Location after: %f,  time of event %f \n", current_event.location_after, current_event.time_after);
 	
-	}
+
 }		
  void set_thread_priority( int change_priority)//set priority for every thread - reused from lab 3
 {
