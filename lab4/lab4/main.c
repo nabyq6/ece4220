@@ -67,7 +67,12 @@ int pipe_for_bonus[2];
 		    printf("Connection to GPS was not made - N_pipe1 error\n");
 		    exit(-1);
 		}
-	    
+//        ---------- trying to get bonus-----
+        if(pipe(pipe_for_bonus)<0){
+            printf("Pipe Creation Error\n");
+            exit(-1);
+        }
+//-------------
 	    printf("Connection to GPS device was successful\n");//only if both progarms are running at
 	    
 	 //   	pthread_create(&check_button_press, NULL, &button_push_collect_time, NULL);
@@ -171,7 +176,7 @@ int pipe_for_bonus[2];
 		//set_thread_priority(10); should need to set a thread priority 
 		struct timeval collected;
 		//if you really forgot a while loop your a dumby 
-		pthread_t event[10];
+		pthread_t event[10], print_via_pipe;
 		int i;
 
 		 printf("Reading from the button press setup\n");
@@ -183,8 +188,7 @@ int pipe_for_bonus[2];
 				}
 
 	while (1)
-	{       
-		i++;
+	{
 		if( read(collect_button_information, &collected, sizeof(collected)) < 0)
         		{
            		 printf("Error reading the information from the button press\n");
@@ -192,6 +196,7 @@ int pipe_for_bonus[2];
         		}
 	//dynamicall creating a thread 
 	pthread_create(&event[i], NULL, &calculate_event,(void*)&collected);
+    pthread_create(&print_via_pipe, NULL, &print_through_pipe, NULL);//***** bonus
 	pthread_detach(event[i]);	
 	if( i == 9)
 	{
@@ -241,9 +246,15 @@ void *calculate_event( void * event )
 				{
 					printf("error opening pipe in collect_ button_information\n");
 			exit(-1);
+<<<<<<< HEAD
 				}
 
      
+=======
+		}
+*/
+
+>>>>>>> dba3b10da9f0d592e6264bdcc503c2eee6bca2c4
 		
 		if( write(pipe_for_bonus[1], &current_event, sizeof(current_event)) < 0)
         		{
@@ -253,29 +264,50 @@ void *calculate_event( void * event )
 
 */
 	pthread_exit(NULL);
+<<<<<<< HEAD
+=======
+
+>>>>>>> dba3b10da9f0d592e6264bdcc503c2eee6bca2c4
 }
 
 //Adding the bonus here 
 void *print_through_pipe( void *cevent)
 {
+<<<<<<< HEAD
 	struct event_buffer current_event;
+=======
+    struct event_buffer current_event;
+>>>>>>> dba3b10da9f0d592e6264bdcc503c2eee6bca2c4
 	/*if((pipe_for_bonus = open("N_pipe3", O_RDONLY)) < 0)
 				{
 					printf("error opening pipe in collect_ button_information\n");
 					exit(-1);
 				}
      */
+<<<<<<< HEAD
+=======
+    printf("****pipe connection for printing setup****\n");
+	while(1)
+    {
+>>>>>>> dba3b10da9f0d592e6264bdcc503c2eee6bca2c4
 		if( read( pipe_for_bonus[0], &current_event, sizeof(current_event)) < 0)
         		{
            		 printf("Error reading the information from the button press\n");
                		  exit(-1);
         		}
 	printf("printing from the piped connect:\n");
+<<<<<<< HEAD
 	printf("location_before: %f time of event:%f\n ", current_event.location_before, current_event.time_before);
 	printf("location of event %f, time of event%f \n" , current_event.location_of_event, current_event.time_of_event);
 	printf("Location after: %f,  time of event %f \n", current_event.location_after, current_event.time_after);
 	
 
+=======
+        printf("location_before: %lf , time of event:%lf\n ", current_event.location_before, current_event.time_before);
+        printf("location of event %lf , time of event: %lf \n" , current_event.location_of_event, current_event.time_of_event);
+        printf("Location after: %lf,  time of event: %lf \n", current_event.location_after, current_event.time_after);
+    }
+>>>>>>> dba3b10da9f0d592e6264bdcc503c2eee6bca2c4
 }		
  void set_thread_priority( int change_priority)//set priority for every thread - reused from lab 3
 {
