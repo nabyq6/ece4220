@@ -80,7 +80,7 @@ int main( int argc, char *argv[])
     // going to set broadcasting address
     
     if (bind(sock, (struct sockaddr *)&server, length) < 0){
-        error("binding");
+        printf("binding error dumby\n");
     }
     
     if (setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &boolval, sizeof(boolval)) < 0){
@@ -89,9 +89,9 @@ int main( int argc, char *argv[])
     }
     
     fromlen = sizeof(struct sockaddr_in);
-    strcpy( my_message, "Nick is on");
+    strcpy( my_message, "Nick is");
     strcat( my_message, findIP());
-    strcat( my_message, "IP is the master");
+    strcat( my_message, " is the master");
     
     
     while(1)
@@ -107,7 +107,7 @@ int main( int argc, char *argv[])
         
         if(strcmp(buffer, "WHOIS\n") == 0)
             {
-                printf("Received WHOIS");
+                printf("Received WHOIS\n");
             
         if(master == 1)
             {
@@ -115,7 +115,7 @@ int main( int argc, char *argv[])
                 information_error_check = sendto(sock, my_message, MSG_SIZE, 0, ( struct sockaddr*)&addr, fromlen);
                 if( information_error_check < 0 )
                 {
-                    error("error sending the imformation to server");
+                    printf("error sending the imformation to server");
                     exit(-1);
                 }
             
@@ -134,11 +134,14 @@ int main( int argc, char *argv[])
                 strcat( vote_string, " ");
                 strcat(vote_string, random_vote);
                 
+		printf("Setting the broadcast id\n");// error check
                 addr.sin_addr.s_addr = inet_addr("128.206.19.255");
-                information_error_check = sendto( sock, vote_string, sizeof(vote_string), 0, (struct sockaddr_in*) &addr, sizeof(addr));
-                if( information_error_check < 0)
+		printf("boardcast id set\n");// error check 
+                information_error_check = sendto( sock, vote_string, sizeof(vote_string), 0, (struct sockaddr *) &addr, sizeof(addr));
+               	printf("error new broadcast id\n");
+		 if( information_error_check < 0)
                     {
-                        error("Error sending the information to server");
+                        printf("Error sending the information to server");
                     }
                     printf("Vote Sent: %s\n", vote_string);
             }
