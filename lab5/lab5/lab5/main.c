@@ -89,9 +89,9 @@ int main( int argc, char *argv[])
     }
     
     fromlen = sizeof(struct sockaddr_in);
-    strcpy( my_message, "Nick is");
+    strcpy( my_message, "Nicholas");
     strcat( my_message, findIP());
-    strcat( my_message, " is the master");
+    strcat( my_message, "is your master");
     
     
     while(1)
@@ -100,7 +100,7 @@ int main( int argc, char *argv[])
         information_error_check = recvfrom(sock, buffer, MSG_SIZE, 0, (struct sockaddr *)&addr, &fromlen);
         if( information_error_check < 0)
             {
-                error("that was an error receiving infromation from the sock connection");
+                error("that was an error receiving infromation from the sock connection\n");
                 exit( -1);
             }
         printf("Received buffer was:\n %s", buffer);
@@ -115,7 +115,7 @@ int main( int argc, char *argv[])
                 information_error_check = sendto(sock, my_message, MSG_SIZE, 0, ( struct sockaddr*)&addr, fromlen);
                 if( information_error_check < 0 )
                 {
-                    printf("error sending the imformation to server");
+                    printf("error sending the imformation to server\n");
                     exit(-1);
                 }
             
@@ -134,14 +134,13 @@ int main( int argc, char *argv[])
                 strcat( vote_string, " ");
                 strcat(vote_string, random_vote);
                 
-		printf("Setting the broadcast id\n");// error check
+	//	printf("Setting the broadcast id\n");// error check
                 addr.sin_addr.s_addr = inet_addr("128.206.19.255");
 		printf("boardcast id set\n");// error check 
-                information_error_check = sendto( sock, vote_string, sizeof(vote_string), 0, (struct sockaddr *) &addr, sizeof(addr));
-               	printf("error new broadcast id\n");
+                information_error_check = sendto( sock, vote_string, sizeof(vote_string), 0, (struct sockaddr *) &addr, sizeof(addr));	
 		 if( information_error_check < 0)
                     {
-                        printf("Error sending the information to server");
+                        printf("Error sending the information to server\n");
                     }
                     printf("Vote Sent: %s\n", vote_string);
             }
@@ -191,6 +190,7 @@ int main( int argc, char *argv[])
                     {
                         master = 0;
                     }
+		master = 1;
             }
         }
     }
