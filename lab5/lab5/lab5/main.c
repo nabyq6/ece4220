@@ -190,7 +190,10 @@ int main( int argc, char *argv[])
                     {
                         master = 0;
                     }
-		master = 1;
+                else
+                    {
+                        master = 1; 
+                    }
             }
         }
     }
