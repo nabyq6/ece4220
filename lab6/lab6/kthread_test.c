@@ -39,7 +39,7 @@ unsigned long * EDGE;
 unsigned long * EVENT; 
 
 int device;
-int frequency = 0; // intialized to to default case 
+int frequency; // intialized to to default case 
 
 // structure for the kthread.
 static struct task_struct *kthread1;
@@ -48,10 +48,13 @@ static irqreturn_t button_piano( int irq, void *device_id)
 	// interupt disabled 
 	disable_irq_nosync(79);
 	
-	unsigned long result_event = *EVENT & 0x1F0000;
+	unsigned long result = *EVENT & 0x1F0000;
 
-	switch(result_event) 
-	{
+	printk("Button 1 pushed\n\n\n\n\n");
+	printk("%lu\n", result);
+
+	switch(result) 
+{
 		case 0x10000:
 			printk("Button 1 pushed");
 			frequency = 1200;
@@ -150,7 +153,7 @@ int thread_init(void)
 	udelay(150);
 	
 	requested = request_irq(79,  button_piano, IRQF_SHARED, "Handles button operation", &device);
-	printk("Buttons enabled");
+	printk("Buttons enabled\n");
 
 	kthread1 = kthread_create(kthread_fn, NULL, kthread_name);
 	

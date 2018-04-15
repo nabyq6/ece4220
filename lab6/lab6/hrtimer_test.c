@@ -4,12 +4,11 @@
    Compile using the Makefile
  ***** I took alot of cord from kthread_test.c
 */
-
 #ifndef MODULE
 #define MODULE
 #endif
-#ifndef __KERNEL__
-#define __KERNEL__
+#ifndef __KERNEL_
+#define __KERNEL_
 #endif
 
 //copied over for Kthread
@@ -41,8 +40,6 @@ unsigned long * EDGE;
 unsigned long * EVENT;
 
 int device;
-
-
 unsigned long timer_interval_ns = 1e6;	// timer interval length (nano sec part)
 static struct hrtimer hr_timer;			// timer structure
 static int dummy;
@@ -58,7 +55,7 @@ static irqreturn_t button_piano( int irq, void *device_id)
     {
         case 0x10000:
             printk("Button 1 pushed");
-            timer_interval_ns = 1200000;//takes the place of frequency
+           timer_interval_ns = 1200000;//takes the place of frequency
             break;
         case 0x20000:
             printk("Button 2 pushed");
@@ -86,22 +83,19 @@ static irqreturn_t button_piano( int irq, void *device_id)
     
     return IRQ_HANDLED;
 }
-
 // Timer callback function: this executes when the timer expires
 enum hrtimer_restart timer_callback(struct hrtimer *timer_for_restart)
 {
   	ktime_t currtime, interval;	// time type, in nanoseconds
 	unsigned long overruns = 0;
 	
-	// Re-configure the timer parameters (if needed/desired)
+	// Re-configure the timer parameters (if needed/desired
   	currtime  = ktime_get();
   	interval = ktime_set(0, timer_interval_ns); // (long sec, long nano_sec)
-	
+
 	// Advance the expiration time to the next interval. This returns how many
 	// intervals have passed. More than 1 may happen if the system load is too high.
   	overruns = hrtimer_forward(timer_for_restart, currtime, interval);
-	
-	
 	// The following printk only executes once every 1000 cycles.
 	if(dummy == 0)
         {
@@ -113,14 +107,10 @@ enum hrtimer_restart timer_callback(struct hrtimer *timer_for_restart)
             *GPSCLR |= 0x40;
             dummy = 0;
         }
-	
-	
-	
 	return HRTIMER_RESTART;	// Return this value to restart the timer.
 							// If you don't want/need a recurring timer, return
 							// HRTIMER_NORESTART (and don't forward the timer).
 }
-
 int timer_init(void)
 {
     int requested;
@@ -170,30 +160,26 @@ int timer_init(void)
 	
 	// Start the timer
  	hrtimer_start(&hr_timer, ktime, HRTIMER_MODE_REL);
-	
 	return 0;
 }
-
 void timer_exit(void)//clearing all event registers and detectors
 {
 	int ret;
     *EDGE = *EDGE & 0xFFE0FFFF;
     //*EVENT = *EVENT | 0x001f0000;
-    
+   
   	ret = hrtimer_cancel(&hr_timer);	// cancels the timer.
   	if(ret)
 		printk("The timer was still in use...\n");
 	else
 		printk("The timer was already canceled...\n");	// if not restarted or
 														// canceled before
-	
   	printk("HR Timer module uninstalling\n");
 	
 }
-
 // Notice this alternative way to define your init_module()
 // and cleanup_module(). "timer_init" will execute when you install your
 // module. "timer_exit" will execute when you remove your module.
-// You can give different names to those functions.
+// You can give different names to those functions
 module_init(timer_init);
 module_exit(timer_exit);
