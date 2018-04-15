@@ -18,6 +18,7 @@
 
 MODULE_LICENSE("GPL");
 
+
 unsigned long timer_interval_ns = 1e6;	// timer interval length (nano sec part)
 static struct hrtimer hr_timer;			// timer structure
 static int count = 0, dummy = 0;
