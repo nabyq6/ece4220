@@ -1,0 +1,1 @@
+cmd_/home/pi/ece4220/lab6/lab6/kthread_speaker.ko := ld -EL -r  -T ./scripts/module-common.lds --build-id  -o /home/pi/ece4220/lab6/lab6/kthread_speaker.ko /home/pi/ece4220/lab6/lab6/kthread_speaker.o /home/pi/ece4220/lab6/lab6/kthread_speaker.mod.o
