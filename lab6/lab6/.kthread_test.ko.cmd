@@ -1,0 +1,1 @@
+cmd_/home/pi/ece4220/lab6/lab6/kthread_test.ko := ld -EL -r  -T ./scripts/module-common.lds --build-id  -o /home/pi/ece4220/lab6/lab6/kthread_test.ko /home/pi/ece4220/lab6/lab6/kthread_test.o /home/pi/ece4220/lab6/lab6/kthread_test.mod.o
