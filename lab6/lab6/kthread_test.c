@@ -151,6 +151,13 @@ int thread_init(void)
 	*PUD &= 0xFFFFFEAA;//off off 
 	*PUD_CLK &= 0xFFE0FFFF;//off now
 	udelay(150);
+
+	//add to solve the issue for only one sound playing see if it works tomorrow
+	*EDGE |= 0x001F0000;
+	// added this 
+
+
+
 	
 	requested = request_irq(79,  button_piano, IRQF_SHARED, "Handles button operation", &device);
 	printk("Buttons enabled\n");
