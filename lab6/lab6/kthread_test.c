@@ -176,6 +176,11 @@ int thread_init(void)
 
 void thread_cleanup(void) {
 	int ret;
+	
+	//add this too clear event 
+	*EDGE = *EDGE & 0xFFE0FFFF;
+	//trying to clear event
+	
 	ret = kthread_stop(kthread1);
 	free_irq(79, &device);								
 	if(!ret)
