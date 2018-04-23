@@ -46,11 +46,11 @@ static struct task_struct *kthread1;
 static irqreturn_t button_piano( int irq, void *device_id)
 {	
 	// interupt disabled 
+printk("Button 1 pushed");
 	disable_irq_nosync(79);
 	
 	unsigned long result = *EVENT & 0x1F0000;
 
-	printk("Button 1 pushed\n\n\n\n\n");
 	printk("%lu\n", result);
 
 	switch(result) 

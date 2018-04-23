@@ -1,0 +1,1 @@
+cmd_/home/pi/ece4220/lab6/lab6/ece4220lab6_isr.ko := ld -EL -r  -T ./scripts/module-common.lds --build-id  -o /home/pi/ece4220/lab6/lab6/ece4220lab6_isr.ko /home/pi/ece4220/lab6/lab6/ece4220lab6_isr.o /home/pi/ece4220/lab6/lab6/ece4220lab6_isr.mod.o
