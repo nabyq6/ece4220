@@ -84,7 +84,7 @@ int main( int argc, char *argv[])
     }
     
     if (setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &boolval, sizeof(boolval)) < 0){
-        printf("error setting socket options\n");
+        printf("error setting socket option\n");
         exit(-1);
     }
     
