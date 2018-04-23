@@ -21,6 +21,9 @@
 #define MSG_SIZE 40
 #define CHAR_DEV "/dev/lab6"
 
+// alot of code if not most of it is copied and used from lab5 sockets
+
+
 char *findIP(void){//taken exactly from lab 5
     int fd;                                                 //IP finding code sourced and modified from
     struct ifreq ifr;
