@@ -14,7 +14,7 @@
 #include <time.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
-#include <sys/type.h>
+
 #include <sys/stat.h>
 #include <fcntl.h>
 
@@ -56,6 +56,8 @@ char random_vote[2];
 int vote_number;
 int boolval = 1;            // for a socket option
 int note;
+
+int dev;
     
     
     if (argc != 2)
@@ -89,7 +91,7 @@ int note;
             exit(-1);
         }
     
-    if((cdev_id = open( CHAR_DEV, O_WRONLY)) == -1)
+    if((dev = open( CHAR_DEV, O_WRONLY)) == -1)
         {
             printf("cant connect to device properly");
             exit(-1);
@@ -129,7 +131,7 @@ int note;
             }
         }
         
-        ddr.sin_addr.s_addr = inet_addr("128.206.19.255");
+        addr.sin_addr.s_addr = inet_addr("128.206.19.255");
         printf("boardcast id set\n");// error check
         information_error_check = sendto( sock, vote_string, sizeof(vote_string), 0, (struct sockaddr *) &addr, sizeof(addr));
         if( information_error_check < 0)
@@ -137,7 +139,6 @@ int note;
             printf("Error sending the information to server\n");
         }
         printf("Vote Sent: %s\n", vote_string);
-    }
     if(buffer[0] == '#')
     {
         switch(buffer[16])
@@ -189,10 +190,13 @@ int note;
                 master = 1;
             }
         }
+    }
+
+
         
-        if( buffer[0] == '@)
+        if( buffer[0] == '@')
            {
-               switch(bufffer[1])
+               switch(buffer[1])
                {
                    case 'A':
                        note = 1;
@@ -211,19 +215,19 @@ int note;
                        break;
                        
                    case 'E':
-                       note = 4;
+                       note = 5;
                    break;
                 }
                if(master == 1)
                {
-               ddr.sin_addr.s_addr = inet_addr("128.206.19.255");
+               addr.sin_addr.s_addr = inet_addr("128.206.19.255");
                printf("boardcast id set\n");// error check
                information_error_check = sendto( sock, vote_string, sizeof(vote_string), 0, (struct sockaddr *) &addr, sizeof(addr));
                if( information_error_check < 0)
                {
                    printf("Error sending the information to server\n");
                }
-               if(write( cdev_id, buffer, sizeof(buffer)) != sizeof(buffer))
+               if(write( dev, buffer, sizeof(buffer)) != sizeof(buffer))
                {
                    printf("error during note changing\n");
                    exit(-1);
