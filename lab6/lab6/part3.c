@@ -56,23 +56,25 @@ char random_vote[2];
 int vote_number;
 int boolval = 1;            // for a socket option
 int note;
+char notes[MSG_SIZE];
 
-int dev;
+
+int cdev_id;
     
-    
+    printf("start of progarm\n");
     if (argc != 2)
         {
             printf("usage: %s port\n", argv[0]);
-            exit(1);
+            exit(-1);
         }
-    
+   printf("Argv\n"); 
     sock = socket(AF_INET, SOCK_DGRAM, 0); // Creates socket. Connectionless.
     if (sock < 0)
         {
             error("socket");
         }
     
-    
+    printf("socked made\n");
     length = sizeof(server); // determines lenght of the structure
     bzero(&server, length); // set all valus = 0
     server.sin_family = AF_INET; //constant for internet domain
@@ -84,26 +86,29 @@ int dev;
         {
             printf("binding error dumby\n");
         }
-    
+    printf("socked bind\n");
     if (setsockopt(sock, SOL_SOCKET, SO_BROADCAST, &boolval, sizeof(boolval)) < 0)
         {
             printf("error setting socket option\n");
             exit(-1);
         }
-    
-    if((dev = open( CHAR_DEV, O_WRONLY)) == -1)
-        {
-            printf("cant connect to device properly");
-            exit(-1);
-        }
-    
+    printf("setsockopt\n");
+    if((cdev_id = open( CHAR_DEV, O_WRONLY)) == -1)
+    {
+        printf("cant connect to device properly %s\n", CHAR_DEV);
+	exit(-1);
+    }
+    fflush(stdout);
+    printf("after the open\n"); 
     fromlen = sizeof(struct sockaddr_in);
     strcpy( my_message, "Nicholas");
     strcat( my_message, findIP());
     strcat( my_message, "is your master");
     
+    printf("in the while loop\n");
     while(1)
     {
+	printf("seg fault\n");
         bzero(buffer, MSG_SIZE);
         information_error_check = recvfrom(sock, buffer, MSG_SIZE, 0, (struct sockaddr *)&addr, &fromlen);
         if( information_error_check < 0)
@@ -129,16 +134,33 @@ int dev;
                 }
                 
             }
-        }
-        
+	}
+
+	printf("seg fault check number 2");
+      if(strcmp(buffer, "VOTE\n") == 0)
+	{
+	printf("sent in vote\n");
+	master = 1;
+	number = rand() % 10 +1;
+	snprintf(random_vote, 10, "%d", number);
+	vote_string[0] = '\0';
+	strcpy(vote_string, "# ");
+	strcat(vote_string, findIP());
+	strcat(vote_string, " ");
+	strcat(vote_string, random_vote);
+	
         addr.sin_addr.s_addr = inet_addr("128.206.19.255");
-        printf("boardcast id set\n");// error check
+        printf("in vote: boardcast id set\n");// error check
+	
         information_error_check = sendto( sock, vote_string, sizeof(vote_string), 0, (struct sockaddr *) &addr, sizeof(addr));
         if( information_error_check < 0)
         {
             printf("Error sending the information to server\n");
         }
         printf("Vote Sent: %s\n", vote_string);
+
+	}
+
     if(buffer[0] == '#')
     {
         switch(buffer[16])
@@ -218,23 +240,28 @@ int dev;
                        note = 5;
                    break;
                 }
-               if(master == 1)
+               if(master == 1 && buffer [0] == '@' )
                {
                addr.sin_addr.s_addr = inet_addr("128.206.19.255");
-               printf("boardcast id set\n");// error check
-               information_error_check = sendto( sock, vote_string, sizeof(vote_string), 0, (struct sockaddr *) &addr, sizeof(addr));
+               //printf("boardcast id set\n");// error check
+		buffer[0] = '\0';
+		strcpy( notes, buffer);
+		//strcat(notes, buffer[1]);
+               information_error_check = sendto( sock, notes , sizeof(notes), 0, (struct sockaddr *) &addr, sizeof(addr));
                if( information_error_check < 0)
                {
                    printf("Error sending the information to server\n");
                }
-               if(write( dev, buffer, sizeof(buffer)) != sizeof(buffer))
+               if(write(cdev_id , buffer, sizeof(buffer)) != sizeof(buffer))
                {
                    printf("error during note changing\n");
                    exit(-1);
                }
+	
            }
         
     }
+
 }
            return 0;
 }

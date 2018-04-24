@@ -82,8 +82,8 @@ int my_kthread(void *ptr)//taken from the kthread part one almost exactly
 
 static ssize_t device_read( struct file *filp, char __user *buff, ssize_t lenght, loff_t *offset)
 {
-	int dummy;
-	dummy = copy_to_user(buff, buffer, lenght);
+	
+	ssize_t dummy = copy_to_user(buff, buffer, lenght);
 	
 	buffer[0] = '\0';
 
@@ -92,7 +92,7 @@ static ssize_t device_read( struct file *filp, char __user *buff, ssize_t lenght
 }
 static ssize_t device_write( struct file *filp, char __user *buff, size_t len, loff_t *off)
 {
-	int dummy;
+	ssize_t  dummy;
 	
 	if ( len > MSG_SIZE)
 	{
@@ -177,7 +177,7 @@ static irqreturn_t button_isr(int irq, void *dev_id)
 	}
 	
 	*GPEDS0 = *GPEDS0 | 0x001F0000;//clear
-	printk("Interrupt handled\n");	
+//	printk("Interrupt handled\n");	
 	enable_irq(79);		// re-enable interrupt
 	
     return IRQ_HANDLED;
@@ -240,10 +240,10 @@ int init_module()
 	}
 
 	major = register_chrdev( 0, CDEV_NAME, &fops);
+	printk("major is: %d", major);
 	if(major < 0)
 	{
 	printk("Registering the character device failed with %d\n", major);
-	
 	return major;
 	}
 	printk("create char device (node) with suko mknod /dev/%s c %d 0\n", CDEV_NAME, major);
