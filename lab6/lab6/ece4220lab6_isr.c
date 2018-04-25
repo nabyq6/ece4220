@@ -58,6 +58,7 @@ int major;
 int mydev_id;	// variable needed to identify the handler
 int n = 100;
 char buffer [MSG_SIZE];
+char try [MSG_SIZE];
 
 int my_kthread(void *ptr)//taken from the kthread part one almost exactly
 {
@@ -81,13 +82,13 @@ int my_kthread(void *ptr)//taken from the kthread part one almost exactly
 // them in your final code.
 
 static ssize_t device_read( struct file *filp, char __user *buff, ssize_t lenght, loff_t *offset)
-{
+{	
+//	printk("buffer in read:  %s", try);
+	ssize_t dummy = copy_to_user(buff, try, lenght);
 	
-	ssize_t dummy = copy_to_user(buff, buffer, lenght);
-	
-	buffer[0] = '\0';
+	try[0] = '\0';
 
-	return 0;
+	return lenght;
 
 }
 static ssize_t device_write( struct file *filp, char __user *buff, size_t len, loff_t *off)
@@ -113,24 +114,27 @@ static ssize_t device_write( struct file *filp, char __user *buff, size_t len, l
 	switch (buffer[1])
 	{
 	case 'A':
-		printk("button 1");
+	//	printk("button 1");
+		strcpy(buffer,"@A");
 		n = 300;
 		break;
 
 	case 'B':
-		printk("button 2");
+	//	printk("button 2");
+		strcpy(buffer,"@B");
+
 		n = 600;
 		break;
 	case 'C':
-		printk("button 3");
+	//	printk("button 3");
 		n = 900;
 		break;
 	case 'D':
-		printk("button 4");
+	//	printk("button 4");
 		n = 1200;
 		break;
 	case 'E':
-		printk("button 5");
+	//	printk("button 5");
 		n = 1400;
 		break;
 	}
@@ -161,18 +165,28 @@ static irqreturn_t button_isr(int irq, void *dev_id)
 	{
 		case 0x10000:
 			n = 300;
+			strcpy(try,"@A");
+			printk("buffer is: %s\n", buffer);
 			break;
 		case 0x20000:
 			n = 600;
+			strcpy(try,"@B");
+			printk("buffer is: %s\n", buffer);
 			break;
 		case 0x40000:
 			n = 900;
+			strcpy(try,"@C");
+			printk("buffer is: %s\n", buffer);
 			break;
 		case 0x80000:
 			n = 1200;
+			strcpy(try,"@D");
+			printk("buffer is: %s\n", buffer);
 			break;
 		case 0x100000:
 			n = 1400;
+			strcpy(try,"@E");
+			printk("buffer is: %s\n", buffer);
 			break;
 	}
 	

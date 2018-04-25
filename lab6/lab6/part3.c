@@ -14,15 +14,20 @@
 #include <time.h>
 #include <net/if.h>
 #include <sys/ioctl.h>
-
+#include <pthread.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 
 #define MSG_SIZE 40
 #define CHAR_DEV "/dev/lab6"
+void *readthread(void *check_this_bitch);
 
 // alot of code if not most of it is copied and used from lab5 sockets
-
+int sock;
+int cdev_id;
+struct sockaddr_in addr, from;
+int master = 0;
+int information_error_check, number ;
 
 char *findIP(void){//taken exactly from lab 5
     int fd;                                                 //IP finding code sourced and modified from
@@ -41,14 +46,15 @@ char *findIP(void){//taken exactly from lab 5
     close(fd);
     return inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr);
 }
+
 int main ( int argc, char *argv[])
 {
-int sock, information_error_check, number ;
+//int information_error_check, number ;
 int master = 0;
 unsigned int length;
 socklen_t fromlen;
 struct sockaddr_in server;
-struct sockaddr_in addr, from;
+//struct sockaddr_in addr, from;
 char buffer[MSG_SIZE];    // to store received messages or messages to be sent.
 char my_message[MSG_SIZE];
 char vote_string[MSG_SIZE];
@@ -57,9 +63,10 @@ int vote_number;
 int boolval = 1;            // for a socket option
 int note;
 char notes[MSG_SIZE];
-
-
-int cdev_id;
+int flag = 0;
+//char bonus[MSG_SIZE];
+int dummy; 
+//int cdev_id;
     
     printf("start of progarm\n");
     if (argc != 2)
@@ -74,7 +81,7 @@ int cdev_id;
             error("socket");
         }
     
-    printf("socked made\n");
+    //printf("socked made\n");
     length = sizeof(server); // determines lenght of the structure
     bzero(&server, length); // set all valus = 0
     server.sin_family = AF_INET; //constant for internet domain
@@ -93,7 +100,7 @@ int cdev_id;
             exit(-1);
         }
     printf("setsockopt\n");
-    if((cdev_id = open( CHAR_DEV, O_WRONLY)) == -1)
+    if((cdev_id = open( CHAR_DEV, O_RDWR)) == -1)
     {
         printf("cant connect to device properly %s\n", CHAR_DEV);
 	exit(-1);
@@ -104,11 +111,13 @@ int cdev_id;
     strcpy( my_message, "Nicholas");
     strcat( my_message, findIP());
     strcat( my_message, "is your master");
-    
-    printf("in the while loop\n");
+    printf("creating thread for bonus\n\n");
+	pthread_t read;
+	pthread_create(&read, NULL, &readthread, (void *)&master);
+ //   printf("in the while loop\n");
     while(1)
     {
-	printf("seg fault\n");
+	//printf("seg fault\n");
         bzero(buffer, MSG_SIZE);
         information_error_check = recvfrom(sock, buffer, MSG_SIZE, 0, (struct sockaddr *)&addr, &fromlen);
         if( information_error_check < 0)
@@ -116,7 +125,7 @@ int cdev_id;
             error("that was an error receiving infromation from the sock connection\n");
             exit( -1);
         }
-        printf("Received buffer was:\n %s", buffer);
+        printf("Received where am i was:\n %s", buffer);
         
         
         if(strcmp(buffer, "WHOIS\n") == 0)
@@ -136,7 +145,7 @@ int cdev_id;
             }
 	}
 
-	printf("seg fault check number 2");
+//	printf("seg fault check number 2");
       if(strcmp(buffer, "VOTE\n") == 0)
 	{
 	printf("sent in vote\n");
@@ -240,18 +249,20 @@ int cdev_id;
                        note = 5;
                    break;
                 }
-               if(master == 1 && buffer [0] == '@' )
+               if(master == 1 && buffer [0] == '@' && flag == 0 )
                {
                addr.sin_addr.s_addr = inet_addr("128.206.19.255");
                //printf("boardcast id set\n");// error check
-		buffer[0] = '\0';
+	//	buffer[0] = '\0';
 		strcpy( notes, buffer);
 		//strcat(notes, buffer[1]);
+		usleep(100);
                information_error_check = sendto( sock, notes , sizeof(notes), 0, (struct sockaddr *) &addr, sizeof(addr));
                if( information_error_check < 0)
                {
                    printf("Error sending the information to server\n");
                }
+		flag = 1;
                if(write(cdev_id , buffer, sizeof(buffer)) != sizeof(buffer))
                {
                    printf("error during note changing\n");
@@ -259,9 +270,48 @@ int cdev_id;
                }
 	
            }
+	else 
+	{
+	flag = 0;
+	}
         
     }
-
 }
            return 0;
+	pthred_join( read, NULL);
+}
+
+void *readthread( void *check_that_bitch)
+{
+	int dummy;	
+	
+	char bonus[MSG_SIZE];
+	while(1)
+	{
+	bzero(bonus, MSG_SIZE);
+	//dummy = read(cdev_id, bonus, sizeof(bonus));	
+	if( read(cdev_id, bonus, sizeof(bonus)) == -1)
+	{
+	printf("error with the read");
+	}
+//	printf("%s\n", bonus);
+	if( bonus[0] == '@')
+	{
+//	printf("master is: %d  bonus is: %s\n", master, bonus);
+
+	if( *(int*)check_that_bitch == 1)
+	{
+//	printf("master is: %d  bonus is: %s\n", master, bonus);
+
+	information_error_check = sendto( sock, bonus, sizeof(bonus), 0, (struct sockaddr *) &addr, sizeof(addr));
+               if( information_error_check < 0)
+              	 {
+                	   printf("Error sending the information to server\n");
+             	  }
+
+	}
+    }
+	usleep(800);
+	bonus[0] = '\0';
+	}
 }
