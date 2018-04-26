@@ -48,10 +48,10 @@ MODULE_LICENSE("GPL");
    one shown in the BCM2835 ARM Peripherals manual.
 */
 #define MSG_SIZE 40
-#define CDEV_NAME "lab6"
+#define CDEV_NAME "project"
 
 static unsigned long *BPtr, *GPSEL0, *GPSEL1, *GPSEL2, *GPSET0, *GPCLR0, *GPEDS0, *GPREN0, *GPPUD, 
- *GPPUDCLK;
+ *GPPUDCLK, *GPLEV0;
 
 static struct task_struct *kthread1;
 int major;
@@ -82,11 +82,14 @@ int my_kthread(void *ptr)//taken from the kthread part one almost exactly
 // them in your final code.
 
 static ssize_t device_read( struct file *filp, char __user *buff, ssize_t lenght, loff_t *offset)
-{	
-//	printk("buffer in read:  %s", try);
+{
+
 	ssize_t dummy = copy_to_user(buff, try, lenght);
-	
+	if( dummy == 0 && try[0] != '\0')
+	{
+	printk("read in: %s\n ", try);
 	try[0] = '\0';
+	}
 
 	return lenght;
 
@@ -114,19 +117,17 @@ static ssize_t device_write( struct file *filp, char __user *buff, size_t len, l
 	switch (buffer[1])
 	{
 	case 'A':
-	//	printk("button 1");
-		strcpy(buffer,"@A");
+		printk("button 1");
 		n = 300;
 		break;
 
 	case 'B':
-	//	printk("button 2");
-		strcpy(buffer,"@B");
-
+		printk("button 2");
+	//	strcpy(buffer,"@B");
 		n = 600;
 		break;
-	case 'C':
-	//	printk("button 3");
+/*	case 'C':
+		printk("button 3");
 		n = 900;
 		break;
 	case 'D':
@@ -137,6 +138,7 @@ static ssize_t device_write( struct file *filp, char __user *buff, size_t len, l
 	//	printk("button 5");
 		n = 1400;
 		break;
+*/
 	}
 	
 	return len;
@@ -165,15 +167,15 @@ static irqreturn_t button_isr(int irq, void *dev_id)
 	{
 		case 0x10000:
 			n = 300;
-			strcpy(try,"@A");
-			printk("buffer is: %s\n", buffer);
+			strcpy(try,"!button1");
+			printk("buffer is: %s\n", try);
 			break;
 		case 0x20000:
 			n = 600;
-			strcpy(try,"@B");
-			printk("buffer is: %s\n", buffer);
+			strcpy(try,"!button2");
+			printk("buffer is: %s\n", try);
 			break;
-		case 0x40000:
+	/*	case 0x40000:
 			n = 900;
 			strcpy(try,"@C");
 			printk("buffer is: %s\n", buffer);
@@ -188,6 +190,7 @@ static irqreturn_t button_isr(int irq, void *dev_id)
 			strcpy(try,"@E");
 			printk("buffer is: %s\n", buffer);
 			break;
+	*/
 	}
 	
 	*GPEDS0 = *GPEDS0 | 0x001F0000;//clear
@@ -200,8 +203,6 @@ static irqreturn_t button_isr(int irq, void *dev_id)
 int init_module()
 {
 	int dummy = 0;
-	char kthread[] = "mythread";
-
 	BPtr = (unsigned long *) ioremap( 0x3f200000, 4096);
 
 	// Map GPIO registers
@@ -228,6 +229,7 @@ int init_module()
 	GPCLR0 = BPtr + 10;
 	GPSEL1 = BPtr + 1;
 	GPSEL2 = BPtr + 2;
+	GPLEV0 = BPtr + 13;
 	GPEDS0 = BPtr +   16;
 	GPREN0 = BPtr + 19;
 	GPPUD = BPtr + 37;
@@ -244,14 +246,17 @@ int init_module()
 	*GPPUDCLK = *GPPUDCLK | 0x001f0000;
 	udelay(10);
 	
-	*GPPUD = *GPPUD & 0xfffffffe;
+	*GPPUD = *GPPUD & 0xfffffffc;
 	*GPPUDCLK  = *GPPUDCLK & 0xffe0ffff;
+
+	*GPEDS0 |= 0x001F0000;
+	*GPREN0 |= 0x001F0000;
 	
-	kthread1 = kthread_create( my_kthread, NULL, kthread);
-	if(kthread1)
-	{
-		wake_up_process(kthread1);
-	}
+//	kthread1 = kthread_create( my_kthread, NULL, kthread);
+//	if(kthread1)
+//	{
+//		wake_up_process(kthread1);
+//	}
 
 	major = register_chrdev( 0, CDEV_NAME, &fops);
 	printk("major is: %d", major);
@@ -260,7 +265,7 @@ int init_module()
 	printk("Registering the character device failed with %d\n", major);
 	return major;
 	}
-	printk("create char device (node) with suko mknod /dev/%s c %d 0\n", CDEV_NAME, major);
+	printk("create char device (node) with sudo mknod /dev/%s c %d 0\n", CDEV_NAME, major);
 	
 	dummy = request_irq(79, button_isr, IRQF_SHARED, "Button_handler", &mydev_id);
 

@@ -1,0 +1,1 @@
+cmd_/home/pi/ece4220/finalproject/unit_kernel.ko := ld -EL -r  -T ./scripts/module-common.lds --build-id  -o /home/pi/ece4220/finalproject/unit_kernel.ko /home/pi/ece4220/finalproject/unit_kernel.o /home/pi/ece4220/finalproject/unit_kernel.mod.o

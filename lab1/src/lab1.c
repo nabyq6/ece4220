@@ -41,11 +41,7 @@ int main(void) {
     pullUpDnControl(button3,PUD_DOWN);
     pullUpDnControl(button4,PUD_DOWN);
     pullUpDnControl(button5,PUD_DOWN);
-<<<<<<< HEAD
-/*switching the leds
-=======
-// switching the leds
->>>>>>> 84c88db6f4f44c5622edc6fff3bf12372eb3a485
+
     while( time < 5 )
     {   
 	
@@ -57,11 +53,8 @@ int main(void) {
         sleep(2);	
 
     }
-<<<<<<< HEAD
-*/
-=======
 
->>>>>>> 84c88db6f4f44c5622edc6fff3bf12372eb3a485
+
 	//what button the user wants to be able to push to activate the speaker
     do
     {
