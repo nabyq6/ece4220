@@ -25,9 +25,13 @@ void *readthread(void *check_this_bitch);
 // alot of code if not most of it is copied and used from lab5 sockets
 int sock;
 int cdev_id;
-struct sockaddr_in addr, from;
+struct sockaddr_in addr, from, shot;
 int master = 0;
 int information_error_check, number ;
+struct sockaddr_in server;
+char port; 
+int flag;
+int catch;
 
 char *findIP(void){//taken exactly from lab 5
     int fd;                                                 //IP finding code sourced and modified from
@@ -49,6 +53,8 @@ char *findIP(void){//taken exactly from lab 5
 
 int main ( int argc, char *argv[])
 {
+flag = 0;
+catch = 0;
 //int information_error_check, number ;
 int master = 0;
 unsigned int length;
@@ -87,6 +93,7 @@ int dummy;
     server.sin_family = AF_INET; //constant for internet domain
     server.sin_addr.s_addr= INADDR_ANY; // MY IP address
     server.sin_port = htons(atoi(argv[1]));
+	port = atoi(argv[1]);
     // going to set broadcasting address
     
     if (bind(sock, (struct sockaddr *)&server, length) < 0)
@@ -249,7 +256,7 @@ int dummy;
                        note = 5;
                    break;
                 }
-               if(master == 1 && buffer [0] == '@' && flag == 0 )
+               if(master == 1 && buffer [0] == '@' && flag == 0 && catch == 0 )
                {
                addr.sin_addr.s_addr = inet_addr("128.206.19.255");
                //printf("boardcast id set\n");// error check
@@ -286,6 +293,9 @@ void *readthread( void *check_that_bitch)
 	int dummy;	
 	
 	char bonus[MSG_SIZE];
+	shot.sin_family = AF_INET;
+	shot.sin_addr.s_addr = INADDR_ANY;
+	shot.sin_port = htons(4000);
 	while(1)
 	{
 	bzero(bonus, MSG_SIZE);
@@ -301,13 +311,14 @@ void *readthread( void *check_that_bitch)
 
 	if( *(int*)check_that_bitch == 1)
 	{
-//	printf("master is: %d  bonus is: %s\n", master, bonus);
-
-	information_error_check = sendto( sock, bonus, sizeof(bonus), 0, (struct sockaddr *) &addr, sizeof(addr));
+	printf("master is: %d  bonus is: %s\n\n", master, bonus);
+	shot.sin_addr.s_addr = inet_addr("128.206.19.255");
+	information_error_check = sendto( sock, bonus, sizeof(bonus), 0, (struct sockaddr *) &shot, sizeof(shot));
                if( information_error_check < 0)
               	 {
                 	   printf("Error sending the information to server\n");
              	  }
+	catch = 1;
 
 	}
     }
