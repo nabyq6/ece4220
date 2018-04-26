@@ -107,7 +107,7 @@ int dummy;
 	sock = socket(AF_INET, SOCK_DGRAM, 0); // Creates socket. Connectionless.
     	if (sock < 0)
         	{
-            	error("socket");
+            		error("socket");
         	}
     
     //printf("socked made\n");
@@ -228,12 +228,12 @@ void *readthread( void *check_that_bitch)
 	while(1)
 	{
 
-	bzero(bonus, MSG_SIZE);
-	if( read(cdev_id, bonus, sizeof(bonus)) == -1)
-	{
-	//printf("error with the read");
-	}
-	//	printf("%s\n", bonus);
+		bzero(bonus, MSG_SIZE);
+		if( read(cdev_id, bonus, sizeof(bonus)) == -1)
+		{
+			//printf("error with the read");
+		}
+		//	printf("%s\n", bonus);
 		if( bonus[0] == '!')
 		{
 			pthread_mutex_lock(&lock);
@@ -259,15 +259,16 @@ void *commandleds(void *not_gonna_be_used)
 	int blue_status = 0;
 	int green_status = 0;
 	int yellow_status = 0;
+	
 	while(1)
 	{
 		if( read(sock, &led, sizeof(led)) < 0)
 		{
-	  	 printf("error receiving led command in commandled function\n");
+	  	 	printf("error receiving led command in commandled function\n");
 		}
 		else
 		{
-		printf("received command is:%s", led); 
+			printf("received command is:%s", led); 
 		}
 		if( led[0] == '@')
 		{
@@ -287,7 +288,6 @@ void *commandleds(void *not_gonna_be_used)
 				printf("command to turn on yellow light\n");
 				digitalWrite( YELLOW, HIGH);
 				yellow_status = 1;
-			
 				break;
 
 			}
