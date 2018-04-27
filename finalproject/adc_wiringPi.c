@@ -15,7 +15,7 @@
 
 #define SPI_CHANNEL	      0	// 0 or 1
 #define SPI_SPEED 	2000000	// Max speed is 3.6 MHz when VDD = 5 V
-#define ADC_CHANNEL       1	// Between 0 and 3
+#define ADC_CHANNEL       2	// Between 0 and 3
 
 // Note 1: The Raspberry Pi has two SPI channels. Channel 0 is used for communication
 // with the MCP3004.

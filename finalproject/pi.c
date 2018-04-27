@@ -31,7 +31,7 @@
 #define BLUE 5
 #define YELLOW 3
 #define GREEN 4
-#define port 5000 //hard corded port number 
+#define port 4000 //hard corded port number 
 
 pthread_mutex_t lock;//lock during critical section 
 
@@ -46,6 +46,9 @@ int cdev_id;
 struct sockaddr_in addr, from;
 int master = 0;
 int information_error_check, number;
+struct sockaddr_in update;
+int filter_boardcast;
+
 
 struct event
 	{
@@ -201,7 +204,14 @@ void * time_update( void* not_used)
 	set_thread_priority(10);
 	int i = 0;
 	char update_buffer[50]; 
+
+	//set up for the boardcast
+	update.sin_family = AF_INET;
+	update.sin_addr.s_addr = INADDR_ANY;
+	update.sin_port = htons(4000);
+	update.sin_addr.s_addr = inet_addr("128.206.19.255");
 	
+
 	struct timespec time;
 	//create timing struct 
 	struct itimerspec period;
@@ -224,13 +234,15 @@ void * time_update( void* not_used)
 	
 	while(1)
 	{
+		filter_boardcast = 1;
+		bzero(update_buffer, 50);				
 		read(time_fd, &num_periods, sizeof(num_periods));
 		if( num_periods > 1)
 		{
 			printf("Window was missed for sending data\n");
 			exit(-1);
 		}
-		sprintf(update_buffer, "( %d, %d, %d, %d, %d, %d, %d, %d, %d ) "
+		sprintf(update_buffer, "(?, 1, %d, %d, %d, %d, %d, %d, %d, %d, %d , NOW())"
 			, event.blue_status
 			, event.yellow_status
 			, event.green_status
@@ -241,10 +253,16 @@ void * time_update( void* not_used)
 			, event.no_power
 			, event.line_overload
 			);	
-		
+	
 		printf("\nsending to desktop: %s", update_buffer);
+		information_error_check = sendto( sock, update_buffer, sizeof(update_buffer), 0, (struct sockaddr *) &update, sizeof(update));
+		if(information_error_check < 0)
+		{
+			printf("Error sending the information to server\n");
+		}
 		
 		update_buffer == '\0';
+			
 	}	
 	
 	
@@ -266,8 +284,8 @@ void *readthread( void *check_that_bitch)
 	while(1)
 	{
 		//set the status of buttons to zero
-	//	event.button_one = 0;
-	//	event.button_two = 0;
+		event.button_one = 0;
+		event.button_two = 0;
 
 		bzero(bonus, MSG_SIZE);
 		if( read(cdev_id, bonus, sizeof(bonus)) == -1)
@@ -279,7 +297,9 @@ void *readthread( void *check_that_bitch)
 		{
 			pthread_mutex_lock(&lock);
 			printf("\nread from kernel module: %s", bonus);
-		//	information_error_check = sendto( sock, bonus, sizeof(bonus), 0, (struct sockaddr *) &addr, sizeof(addr));
+		//	information_error_check = sendto( sock, bonus, sizeof(bonus), 0, (struct sockaddr *) &addr, sizeof(addr));	event.first_switch = event.first_switch & 1;
+						printf("\n%d", event.first_switch);
+
                		if( information_error_check < 0)
               	 	{
                 		   printf("Error sending the information to server\n");
@@ -287,44 +307,47 @@ void *readthread( void *check_that_bitch)
 			switch(bonus[1]) 
 				{
 				case '4':
-					printf("\nupdate status:  %s", bonus);
-					if(event.first_switch = 0)
-					{
-						event.first_switch = 1;
+				//	printf("\nupdate status:%s", bonus);
+					if(event.first_switch == 0)
+					{		
+					event.first_switch = 1;
 					}
 					else 
 					{
-						event.first_switch  = 0;
+					event.first_switch  = 0;
 					}
 					break; 
 				case '3':
-					printf("\nupdate status:  %s", bonus);
-					if(event.second_switch = 0)
-					{
-						event.second_switch = 1;
+				//	printf("\nupdate status:%s", bonus);
+					if(event.second_switch == 0)
+					{		
+					event.second_switch = 1;
 					}
 					else 
 					{
-						event.second_switch  = 0;
+					event.second_switch  = 0;
 					}
+					
 					break;
 				case '2':
-					printf("\nupdate status:  %s", bonus);
+				//	printf("\nupdate status:  %s", bonus);
 					event.button_one = 1;
 					break;
 				case '1':
-					printf("\nupdate status:  %s", bonus);
+				//	printf("\nupdate status:  %s", bonus);
 					event.button_two = 1;
 					break; 
 
 				}
-
+		bonus[0] = '\0';
 		pthread_mutex_unlock(&lock);
 		}
-		bonus[0] = '\0';
+	//	bonus[0] = '\0';
 
     	}	
-   	pthread_exit(NULL);
+   	pthread_exit(NULL);	event.first_switch = event.first_switch & 1;
+						printf("\n%d", event.first_switch);
+
 }
 void *commandleds(void *not_gonna_be_used)
 {
@@ -336,14 +359,13 @@ void *commandleds(void *not_gonna_be_used)
 	event.blue_status = 0;	
 	while(1)
 	{
+		if( filter_boardcast != 1)
+		{
 		if( read(sock, &led, sizeof(led)) < 0)
 		{
 	  	 	printf("error receiving led command in commandled function\n");
 		}
-		else
-		{
-			printf("received command is:%s", led); 
-		}
+				printf("\nreceived command is:%s", led); 
 		if( led[0] == '@')
 		{
 			switch(led[1])
@@ -388,7 +410,7 @@ void *commandleds(void *not_gonna_be_used)
 
 			}
 		}
-
+		}
 	 }
 	pthread_exit(NULL);
 }
