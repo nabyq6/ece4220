@@ -53,30 +53,12 @@ MODULE_LICENSE("GPL");
 static unsigned long *BPtr, *GPSEL0, *GPSEL1, *GPSEL2, *GPSET0, *GPCLR0, *GPEDS0, *GPREN0, *GPPUD, 
  *GPPUDCLK, *GPLEV0;
 
-static struct task_struct *kthread1;
 int major;
 int mydev_id;	// variable needed to identify the handler
 int n = 100;
 char buffer [MSG_SIZE];
 char try [MSG_SIZE];
 
-int my_kthread(void *ptr)//taken from the kthread part one almost exactly
-{
-	while(1)
-	{
-		*GPSET0 = *GPSET0 | 0x00000040;
-		udelay(n);
-		*GPCLR0 = *GPCLR0 | 0x00000040;
-		udelay(n);
-	
-		if(kthread_should_stop())
-		{
-			printk("thread was exited\n");
-			do_exit(0);
-		}
-	}
-	return 0;
-}
 // Interrupt handler function. Tha name "button_isr" can be different.
 // You may use printk statements for debugging purposes. You may want to remove
 // them in your final code.
@@ -167,33 +149,28 @@ static irqreturn_t button_isr(int irq, void *dev_id)
 	{
 		case 0x10000:
 			n = 300;
-			strcpy(try,"!button1");
+			strcpy(try,"!1button");
 			printk("buffer is: %s\n", try);
 			break;
 		case 0x20000:
 			n = 600;
-			strcpy(try,"!button2");
+			strcpy(try,"!2button");
 			printk("buffer is: %s\n", try);
 			break;
-	/*	case 0x40000:
+		case 0x02000:
 			n = 900;
-			strcpy(try,"@C");
-			printk("buffer is: %s\n", buffer);
+			strcpy(try,"!3SW");
+			printk("buffer is: %s\n", try);
 			break;
-		case 0x80000:
+		case 0x01000:
 			n = 1200;
-			strcpy(try,"@D");
-			printk("buffer is: %s\n", buffer);
+			strcpy(try,"!4SW");
+			printk("buffer is: %s\n", try);
 			break;
-		case 0x100000:
-			n = 1400;
-			strcpy(try,"@E");
-			printk("buffer is: %s\n", buffer);
-			break;
-	*/
+			
 	}
 	
-	*GPEDS0 = *GPEDS0 | 0x001F0000;//clear
+	*GPEDS0 = *GPEDS0 | 0x001F3000;//clear
 //	printk("Interrupt handled\n");	
 	enable_irq(79);		// re-enable interrupt
 	
@@ -236,21 +213,21 @@ int init_module()
 	GPPUDCLK = BPtr + 38;
 	
 	*GPSEL0 = *GPSEL0 | 0x00040000;
-	*GPSEL1 = *GPSEL1 & 0xc003ffff;
-	*GPSEL2 = *GPSEL2 & 0xfffffff8;
+	*GPSEL1 = *GPSEL1 & 0xC003F03F;
+	*GPSEL2 = *GPSEL2 & 0xFFFFFFF8;
 	
-	*GPREN0 = *GPREN0 | 0x001f0000;
+	*GPREN0 = *GPREN0 | 0x001F3000;
 	
 	*GPPUD = *GPPUD | 0x00000001;
 	
-	*GPPUDCLK = *GPPUDCLK | 0x001f0000;
-	udelay(10);
-	
-	*GPPUD = *GPPUD & 0xfffffffc;
-	*GPPUDCLK  = *GPPUDCLK & 0xffe0ffff;
+	udelay(50);
+	*GPPUDCLK = *GPPUDCLK | 0x001F3000;
+	udelay(50);	
+	*GPPUD = *GPPUD & 0xFFFFFFFC;
+	*GPPUDCLK  = *GPPUDCLK & 0xFFE0CFFF;
 
-	*GPEDS0 |= 0x001F0000;
-	*GPREN0 |= 0x001F0000;
+	*GPEDS0 |= 0x001F3000;
+	*GPREN0 |= 0x001F3000;
 	
 //	kthread1 = kthread_create( my_kthread, NULL, kthread);
 //	if(kthread1)
@@ -259,7 +236,7 @@ int init_module()
 //	}
 
 	major = register_chrdev( 0, CDEV_NAME, &fops);
-	printk("major is: %d", major);
+	printk("major is: %d\n", major);
 	if(major < 0)
 	{
 	printk("Registering the character device failed with %d\n", major);
@@ -281,9 +258,9 @@ void cleanup_module()
 	// Disable (Async) Rising Edge detection for all 5 GPIO ports.
 	
 	// Remove the interrupt handler; you need to provide the same identifier
-	kthread_stop( kthread1 );
-	*GPEDS0 = *GPEDS0 | 0x001f0000;
-	*GPREN0 = *GPREN0 | 0xffe0ffff;
+//	kthread_stop( kthread1 );
+	*GPEDS0 = *GPEDS0 | 0x001F3000;
+	*GPREN0 = *GPREN0 | 0xFFE0CFFF;
 	
 	unregister_chrdev(major, CDEV_NAME);
 

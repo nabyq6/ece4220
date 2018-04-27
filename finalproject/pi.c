@@ -33,33 +33,47 @@
 #define GREEN 4
 #define port 5000 //hard corded port number 
 
-pthread_mutex_t lock;
+pthread_mutex_t lock;//lock during critical section 
 
 void *readthread(void *check_this_bitch);//thread to read from character device
 void *commandleds(void *not_gonna_be_used);//command to turn the leds on or off
-void set_thread_priority( int change_priority);
-
+void set_thread_priority( int change_priority);//set thread priority 
+void *time_update( void * not_used);//send a status update
 
 // alot of code if not most of it is copied and used from lab5 sockets
 int sock;
 int cdev_id;
 struct sockaddr_in addr, from;
 int master = 0;
-int information_error_check, number ;
+int information_error_check, number;
+
+struct event
+	{
+		int yellow_status;
+		int blue_status;
+		int green_status;
+		int first_switch;
+		int second_switch;
+		int button_one;
+		int button_two;
+		int no_power;
+		int line_overload;
+	}event;
+	
 
 void set_thread_priority( int change_priority)
 {
 	struct sched_param param;
-		
+	
 	param.sched_priority = 50 + change_priority;
 	
 	if( sched_setscheduler(0, SCHED_FIFO, &param) != 0)
 	{
-	printf("real time is not accessed\n");
-	exit(-1);
-	}
-
+		printf("real time is not accessed\n");
+		exit(-1);
+	} 
 }
+
 
 char *findIP(void){//taken exactly from lab 5
     int fd;                                                 //IP finding code sourced and modified from
@@ -165,57 +179,77 @@ int dummy;
 	pthread_t lighting;
 	pthread_create(&lighting, NULL, &commandleds, NULL);
 
+	//creating the thread for creating update string for data base
+	pthread_t update;
+	pthread_create(&update, NULL, &time_update, NULL);
+
 	while(1)
 	{
-	usleep(100);
+		usleep(100);
 	}
 	
-/*    while(1)
-    {
-	//printf("seg fault\n");
-        bzero(buffer, MSG_SIZE);
-        information_error_check = recvfrom(sock, buffer, MSG_SIZE, 0, (struct sockaddr *)&addr, &fromlen);
-        if( information_error_check < 0)
-        {
-            error("that was an error receiving infromation from the sock connection\n");
-            exit( -1);
-        }        
 
-         if(master == 1 && buffer [0] == '@' && flag == 0 )
-          {
-               addr.sin_addr.s_addr = inet_addr("128.206.19.255");
-               //printf("boardcast id set\n");// error check
-	//	buffer[0] = '\0';
-		strcpy( notes, buffer);
-		//strcat(notes, buffer[1]);
-		usleep(100);
-               information_error_check = sendto( sock, notes , sizeof(notes), 0, (struct sockaddr *) &addr, sizeof(addr));
-               		if( information_error_check < 0)
-               		{
-                   		printf("Error sending the information to server\n");
-               		}
-		
-		flag = 1;
-               		
-			if(write(cdev_id , buffer, sizeof(buffer)) != sizeof(buffer))
-               		{
-                	   	printf("error during note changing\n");
-                   		exit(-1);
-               		}
-	
-        	}
-		else 
-		{
-			flag = 0;
-		}
-        
-    }
-*/
            
 	pthread_join( read, NULL);
 	pthread_join( lighting, NULL);
+	pthread_join( update, NULL);
 
 	return 0;
+}
+void * time_update( void* not_used)
+{
+	set_thread_priority(10);
+	int i = 0;
+	char update_buffer[50]; 
+	
+	struct timespec time;
+	//create timing struct 
+	struct itimerspec period;
+		period.it_interval.tv_sec = 1;
+		period.it_interval.tv_nsec = 0;
+		period.it_value.tv_sec = 1;
+		period.it_value.tv_nsec = 0;
+	
+	uint64_t num_periods = 0;
+	
+	int time_fd = timerfd_create( CLOCK_MONOTONIC, 0);
+		
+	clock_gettime(CLOCK_REALTIME, &time);
+	
+	if( timerfd_settime( time_fd, 0, &period, NULL) == -1)
+	{	
+		printf("timer failed to create\n");
+		exit(-1);
+	}
+	
+	while(1)
+	{
+		read(time_fd, &num_periods, sizeof(num_periods));
+		if( num_periods > 1)
+		{
+			printf("Window was missed for sending data\n");
+			exit(-1);
+		}
+		sprintf(update_buffer, "( %d, %d, %d, %d, %d, %d, %d, %d, %d ) "
+			, event.blue_status
+			, event.yellow_status
+			, event.green_status
+			, event.first_switch
+			, event.second_switch
+			, event.button_one	
+			, event.button_two	
+			, event.no_power
+			, event.line_overload
+			);	
+		
+		printf("\nsending to desktop: %s", update_buffer);
+		
+		update_buffer == '\0';
+	}	
+	
+	
+	pthread_exit(0);
+
 }
 
 void *readthread( void *check_that_bitch)
@@ -223,17 +257,24 @@ void *readthread( void *check_that_bitch)
 	set_thread_priority(10);
 	//may need to add semphore to bc of the read function
 	int dummy;	
-	
+	event.first_switch = 0;
+	event.second_switch = 0;
+	event.button_one = 0;
+	event.button_two = 0;
+
 	char bonus[MSG_SIZE];
 	while(1)
 	{
+		//set the status of buttons to zero
+	//	event.button_one = 0;
+	//	event.button_two = 0;
 
 		bzero(bonus, MSG_SIZE);
 		if( read(cdev_id, bonus, sizeof(bonus)) == -1)
 		{
 			//printf("error with the read");
 		}
-		//	printf("%s\n", bonus);
+	//	printf("%s\n", bonus);
 		if( bonus[0] == '!')
 		{
 			pthread_mutex_lock(&lock);
@@ -243,10 +284,43 @@ void *readthread( void *check_that_bitch)
               	 	{
                 		   printf("Error sending the information to server\n");
              		}
+			switch(bonus[1]) 
+				{
+				case '4':
+					printf("\nupdate status:  %s", bonus);
+					if(event.first_switch = 0)
+					{
+						event.first_switch = 1;
+					}
+					else 
+					{
+						event.first_switch  = 0;
+					}
+					break; 
+				case '3':
+					printf("\nupdate status:  %s", bonus);
+					if(event.second_switch = 0)
+					{
+						event.second_switch = 1;
+					}
+					else 
+					{
+						event.second_switch  = 0;
+					}
+					break;
+				case '2':
+					printf("\nupdate status:  %s", bonus);
+					event.button_one = 1;
+					break;
+				case '1':
+					printf("\nupdate status:  %s", bonus);
+					event.button_two = 1;
+					break; 
+
+				}
 
 		pthread_mutex_unlock(&lock);
 		}
-			usleep(800);
 		bonus[0] = '\0';
 
     	}	
@@ -256,10 +330,10 @@ void *commandleds(void *not_gonna_be_used)
 {
 	//gonna have to figure out how to implement data base then come back and add that implementation
 	char led[MSG_SIZE];
-	int blue_status = 0;
-	int green_status = 0;
-	int yellow_status = 0;
 	
+	event.yellow_status = 0;
+	event.green_status = 0;
+	event.blue_status = 0;	
 	while(1)
 	{
 		if( read(sock, &led, sizeof(led)) < 0)
@@ -277,17 +351,17 @@ void *commandleds(void *not_gonna_be_used)
 			case 'B':
 				printf("command to turn on blue light\n");
 				digitalWrite( BLUE, HIGH);
-				blue_status = 1;
+				event.blue_status = 1;
 				break;
 			case 'G':
 				printf("command to turn on green light\n");
 				digitalWrite( GREEN, HIGH);
-				green_status = 1;
+				event.green_status = 1;
 				break;
 			case 'Y':
 				printf("command to turn on yellow light\n");
 				digitalWrite( YELLOW, HIGH);
-				yellow_status = 1;
+				event.yellow_status = 1;
 				break;
 
 			}
@@ -299,17 +373,17 @@ void *commandleds(void *not_gonna_be_used)
 			case 'B':
 				printf("command to turn off blue light\n");
 				digitalWrite( BLUE, LOW);
-				blue_status = 0;
+				event.blue_status = 0;
 				break;
 			case 'G':
 				printf("command to turn off green light\n");
 				digitalWrite( GREEN, LOW);
-				green_status = 0;
+				event.green_status = 0;
 				break;
 			case 'Y':
 				printf("command to turn off yellow light\n");
 				digitalWrite( YELLOW, LOW);
-				yellow_status = 0;
+				event.yellow_status = 0;
 				break;
 
 			}
