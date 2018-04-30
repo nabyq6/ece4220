@@ -26,7 +26,7 @@
 
 #define MSG_SIZE 40
 #define CHAR_DEV "/dev/project"
-#define SPI_SPEED 2000000
+#define SPI_SPEED 2000
 #define SPI_CHANNEL 0 // could be 0 or 1
 //Defining led pins for easier reading
 #define BLUE 5
@@ -34,6 +34,10 @@
 #define GREEN 4
 #define port 4000 //hard corded port number 
 #define ADC_CHANNEL 2
+
+//max and minimum for the ADC
+#define MIN 450
+#define MAX 790
 
 uint16_t get_ADC(int channel);
 
@@ -163,8 +167,6 @@ int dummy;
     strcpy( my_message, "connection");
   
 //seting up the lighting on the the board
-	event.first_switch = event.first_switch & 1;
-						printf("\n%d", event.first_switch);
 	wiringPiSetupGpio();
 	if(wiringPiSPISetup(SPI_CHANNEL, SPI_SPEED)< 0)
 		{
@@ -199,7 +201,7 @@ int dummy;
 
 	while(1)
 	{
-		usleep(100);
+		usleep(1000);
 	}
 	
 
@@ -216,33 +218,59 @@ int dummy;
 uint16_t get_ADC( int ADC_chan)
 {
 	uint8_t spiData[3];
-
-	spiData[0] = 0b00000001;
-	spiData[1] = 0b10000000 | (ADC_chan << 4);
+		usleep(1700);
+		spiData[0] = 0b00000001;
+		spiData[1] = 0b10000000 | (ADC_chan << 4);
 	
-	spiData[2] = 0;
-	wiringPiSPIDataRW( SPI_CHANNEL, spiData, 3);
-	
+		spiData[2] = 0;
+		wiringPiSPIDataRW( SPI_CHANNEL, spiData, 3);
+			
 	return (( spiData[1] << 8 ) | spiData[2]); 
 
 }
 void *ADC_read( void *ADC_chan)
 {
+	set_thread_priority(10);
+
 	uint16_t ADCvalue;
-	
+	int sample_value;
+	int value[5];
+	int i = 0;
+
 	while(1)
 	{
-	ADCvalue = get_ADC( ADC_CHANNEL);
-	printf("ADC Value: %d\n", ADCvalue);
-	fflush(stdout);
-	usleep(1700);
-	}
+		ADCvalue = get_ADC( ADC_CHANNEL);
+		value[i] = ADCvalue;
+	//	printf("ADC Value: %d\n", sample_value);
+		fflush(stdout);
 	
-	return 0; 
+	if( MAX < ADCvalue || MIN > ADCvalue)
+	{
+		event.line_overload = 1;
+	//	printf("\nevent line overload");	
+	}
+	//value[i] = sample_value;
+	i++;	
+
+	if( value[0] = value[1] = value[2] = value[3] = value[4] )
+	{
+		event.no_power = 1;
+	//	printf("\n event no power"); 
+	}
+			
+	if(i == 4)
+	{
+	 i = 0; 
+	}
+
+	}
+
+	
+	pthread_exit(0); 
 } 
 void * time_update( void* not_used)
 {
-	set_thread_priority(10);
+	set_thread_priority(11);
 	int i = 0;
 	char update_buffer[50]; 
 
@@ -337,11 +365,9 @@ void *readthread( void *check_that_bitch)
 		if( bonus[0] == '!')
 		{
 			pthread_mutex_lock(&lock);
-			printf("\nread from kernel module: %s", bonus);
+		//	printf("\nread from kernel module: %s", bonus);
 		//	information_error_check = sendto( sock, bonus, sizeof(bonus), 0, (struct sockaddr *) &addr, sizeof(addr));	event.first_switch = event.first_switch & 1;
-						printf("\n%d", event.first_switch);
-
-               		if( information_error_check < 0)
+			if( information_error_check < 0)
               	 	{
                 		   printf("Error sending the information to server\n");
              		}
@@ -371,7 +397,7 @@ void *readthread( void *check_that_bitch)
 					
 					break;
 				case '2':
-					printf("\nupdate status:  %s", bonus);
+				//	printf("\nupdate status:  %s", bonus);
 					if( event.button_one == 0)
 					{
 					event.button_one = 1;
@@ -382,7 +408,7 @@ void *readthread( void *check_that_bitch)
 					}
 					break;
 				case '1':
-					printf("\nupdate status:  %s", bonus);
+				//	printf("\nupdate status:  %s", bonus);
 					if( event.button_two == 0)
 					{
 					event.button_two = 1;
