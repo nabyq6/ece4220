@@ -22,6 +22,7 @@
 #include <wiringPi.h>
 #include <sched.h>
 #include <sys/timerfd.h>
+#include <wiringPiSPI.h> 
 
 #define MSG_SIZE 40
 #define CHAR_DEV "/dev/project"
@@ -32,6 +33,9 @@
 #define YELLOW 3
 #define GREEN 4
 #define port 4000 //hard corded port number 
+#define ADC_CHANNEL 2
+
+uint16_t get_ADC(int channel);
 
 pthread_mutex_t lock;//lock during critical section 
 
@@ -39,6 +43,7 @@ void *readthread(void *check_this_bitch);//thread to read from character device
 void *commandleds(void *not_gonna_be_used);//command to turn the leds on or off
 void set_thread_priority( int change_priority);//set thread priority 
 void *time_update( void * not_used);//send a status update
+void *ADC_read( void*  ADC_chan); 
 
 // alot of code if not most of it is copied and used from lab5 sockets
 int sock;
@@ -158,6 +163,8 @@ int dummy;
     strcpy( my_message, "connection");
   
 //seting up the lighting on the the board
+	event.first_switch = event.first_switch & 1;
+						printf("\n%d", event.first_switch);
 	wiringPiSetupGpio();
 	if(wiringPiSPISetup(SPI_CHANNEL, SPI_SPEED)< 0)
 		{
@@ -184,7 +191,11 @@ int dummy;
 
 	//creating the thread for creating update string for data base
 	pthread_t update;
-	pthread_create(&update, NULL, &time_update, NULL);
+	pthread_create(&update, NULL, &time_update, NULL); 
+	
+	//create thread to continously read the adc
+	pthread_t ADC;
+	pthread_create( &ADC, NULL, &ADC_read, NULL);
 
 	while(1)
 	{
@@ -196,9 +207,39 @@ int dummy;
 	pthread_join( read, NULL);
 	pthread_join( lighting, NULL);
 	pthread_join( update, NULL);
-
+	pthread_join( ADC, NULL);
+	close(sock);
+	
 	return 0;
 }
+
+uint16_t get_ADC( int ADC_chan)
+{
+	uint8_t spiData[3];
+
+	spiData[0] = 0b00000001;
+	spiData[1] = 0b10000000 | (ADC_chan << 4);
+	
+	spiData[2] = 0;
+	wiringPiSPIDataRW( SPI_CHANNEL, spiData, 3);
+	
+	return (( spiData[1] << 8 ) | spiData[2]); 
+
+}
+void *ADC_read( void *ADC_chan)
+{
+	uint16_t ADCvalue;
+	
+	while(1)
+	{
+	ADCvalue = get_ADC( ADC_CHANNEL);
+	printf("ADC Value: %d\n", ADCvalue);
+	fflush(stdout);
+	usleep(1700);
+	}
+	
+	return 0; 
+} 
 void * time_update( void* not_used)
 {
 	set_thread_priority(10);
@@ -284,8 +325,8 @@ void *readthread( void *check_that_bitch)
 	while(1)
 	{
 		//set the status of buttons to zero
-		event.button_one = 0;
-		event.button_two = 0;
+	//	event.button_one = 0;
+	//	event.button_two = 0;
 
 		bzero(bonus, MSG_SIZE);
 		if( read(cdev_id, bonus, sizeof(bonus)) == -1)
@@ -330,12 +371,27 @@ void *readthread( void *check_that_bitch)
 					
 					break;
 				case '2':
-				//	printf("\nupdate status:  %s", bonus);
+					printf("\nupdate status:  %s", bonus);
+					if( event.button_one == 0)
+					{
 					event.button_one = 1;
+					}
+					else 
+					{
+					event.button_one = 0;
+					}
 					break;
 				case '1':
-				//	printf("\nupdate status:  %s", bonus);
+					printf("\nupdate status:  %s", bonus);
+					if( event.button_two == 0)
+					{
 					event.button_two = 1;
+					}
+					else 
+					{
+					event.button_two = 0;
+					}
+							
 					break; 
 
 				}
@@ -345,8 +401,7 @@ void *readthread( void *check_that_bitch)
 	//	bonus[0] = '\0';
 
     	}	
-   	pthread_exit(NULL);	event.first_switch = event.first_switch & 1;
-						printf("\n%d", event.first_switch);
+   	pthread_exit(NULL);
 
 }
 void *commandleds(void *not_gonna_be_used)

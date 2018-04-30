@@ -49,7 +49,7 @@ int main(void)
 		ADCvalue = get_ADC(ADC_CHANNEL);
 		printf("ADC Value: %d\n", ADCvalue);
 		fflush(stdout);
-		sleep(1);
+		usleep(1700);
 	}
      
   return 0;   
