@@ -32,7 +32,7 @@ void send_to_database_log( char message);
 void send_to_database_error( char message);
 void *send_command( void *not_used);
 void *receive_update(void *not_used);
-void database_connection()
+void database_connection();
 
 
 //sending the variables are global for threads to beable to use them too
@@ -196,7 +196,7 @@ void *send_command( void *not_used)
 	char send[MSG_SIZE];
 	send.sin_family = AF_INET;
 	send.sin_addr.s_addr = INADDR_ANY;
-	send.sin_port = htons(4000);
+	send.sin_port = htons(port);
 	while(1)
 	{
 	bzero(send, MSG_SIZE);
@@ -210,18 +210,20 @@ void *send_command( void *not_used)
 		
 		printf("message was sent: %s", send);//comment out once testing is done
 		//comment this once testing is done and we are ready to test the database side
-		send_to_database_log( send );
+	//	send_to_database_log( send );
 	}
+	pthread_exit(0);
 }
 void *receive_update(void *not_used)
 {
 	char buffer [MSG_SIZE];
 	receive.sin_family = AF_INET;
 	receive.sin_addr.s_addr = INADDR_ANY;
-	receive.sin_port = htons(4000);
+	receive.sin_port = htons(port);
 
     while(1)
     {
+	scanf(" %s", buffer); 
         bzero(buffer, MSG_SIZE);
 //	shot.sin_addr.s_addr = inet_addr(historian_address);
         information_error_check = recvfrom(sock, buffer, MSG_SIZE, 0, (struct sockaddr *)&receive, &receive);
