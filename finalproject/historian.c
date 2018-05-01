@@ -199,18 +199,21 @@ void *send_command( void *not_used)
 	send.sin_port = htons(port);
 	while(1)
 	{
-	bzero(send, MSG_SIZE);
-	shot.sin_addr.s_addr = inet_addr(pi_addresss);//change from boardcast address to pi address
-	information_error_check = sendto( sock, send, sizeof(send), 0, (struct sockaddr *) &send, sizeof(send));
+	scanf("%s", buffer);
+	if( buffer != '\0')
+		{
+		bzero(send, MSG_SIZE);
+		shot.sin_addr.s_addr = inet_addr(pi_addresss);//change from boardcast address to pi address
+		information_error_check = sendto( sock, send, sizeof(send), 0, (struct sockaddr *) &send, sizeof(send));
                if( information_error_check < 0)
               	 {
                 	   printf("Error sending the information to server\n");
          	  }
-		else
 		
 		printf("message was sent: %s", send);//comment out once testing is done
 		//comment this once testing is done and we are ready to test the database side
 	//	send_to_database_log( send );
+		}
 	}
 	pthread_exit(0);
 }
@@ -222,8 +225,7 @@ void *receive_update(void *not_used)
 	receive.sin_port = htons(port);
 
     while(1)
-    {
-	scanf(" %s", buffer); 
+  {
         bzero(buffer, MSG_SIZE);
 //	shot.sin_addr.s_addr = inet_addr(historian_address);
         information_error_check = recvfrom(sock, buffer, MSG_SIZE, 0, (struct sockaddr *)&receive, &receive);
