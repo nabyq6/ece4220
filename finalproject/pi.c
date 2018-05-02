@@ -186,6 +186,7 @@ int dummy;
 	//creating the thread to read from the kernel module 
 	pthread_t read;
 	pthread_create(&read, NULL, &readthread, NULL);
+	printf("\n%d", event.first_switch);
 
 	//creating the pthread to read from the leds	
 	pthread_t lighting;
