@@ -157,7 +157,7 @@ void send_to_database_log( char message[MSG_SIZE])
 	
 	//insert_this = cons + to_string(messge);
 	strcat( cons, message);
-//	printf("%s\n", cons);
+	//printf("%s\n", cons);
 
 	char *str = cons;
 	char *query = str;
@@ -188,7 +188,7 @@ void send_to_database_error( char message[MSG_SIZE])
 	
 	//insert_this = construct + to_string(messge);
 	strcat( construct, message );
-	printf("%s\n", construct);
+//	printf("%s\n", construct);
 	
 	char *str = construct;
 	char *query = str;
@@ -206,7 +206,7 @@ void send_to_database_error( char message[MSG_SIZE])
             exit(-1);
         }
 	
-	printf("\nEntered into the error database successful");
+//	printf("\nEntered into the error database successful\n");
 	
 
 }
@@ -262,11 +262,12 @@ void *receive_update(void *not_used)
                 printf("that was an error receiving infromation from the sock connection\n");
                 exit( -1);
             }
-//	printf("\nReceived was infomration was: %s\n", buffer);//comment out once testing is done 
+//	("\nReceived was infomration was: %s\n", buffer);//comment out once testing is done 
 	if( buffer[0] != '@' && buffer[0] != '#')
 	{
-		if( buffer[0] == '!')
+		if( buffer[1] == ' ')
 		{
+//		printf("\n was sent to error log");
 		send_to_database_error( buffer );
 		}
 		else
