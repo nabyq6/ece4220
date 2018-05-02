@@ -38,7 +38,6 @@
 //max and minimum for the ADC
 #define MIN 450
 #define MAX 790
-
 uint16_t get_ADC(int channel);
 
 pthread_mutex_t lock;//lock during critical section 
@@ -271,7 +270,7 @@ void *ADC_read( void *ADC_chan)
 } 
 void * time_update( void* not_used)
 {
-	set_thread_priority(11);
+	set_thread_priority(10);
 	int i = 0;
 	char update_buffer[50]; 
 
@@ -312,7 +311,7 @@ void * time_update( void* not_used)
 			printf("Window was missed for sending data\n");
 			exit(-1);
 		}
-		sprintf(update_buffer, "(?, 1, %d, %d, %d, %d, %d, %d, %d, %d, %d , NOW());"
+		sprintf(update_buffer, "(?, 1, %d, %d, %d, %d, %d, %d, %d, %d, %d , time());"
 			, event.blue_status
 			, event.yellow_status
 			, event.green_status
@@ -356,23 +355,19 @@ void *readthread( void *check_that_bitch)
 		//set the status of buttons to zero
 	//	event.button_one = 0;
 	//	event.button_two = 0;
-
+	//	pthread_mutex_lock(&lock);
 		bzero(bonus, MSG_SIZE);
 		if( read(cdev_id, bonus, sizeof(bonus)) == -1)
 		{
 			printf("error with the read");
 		}
+		fflush(stdout);
 	//	printf("bonus is:%s\n", bonus);
 		if( bonus[0] == '!')
 		{
-			pthread_mutex_lock(&lock);
-		//	printf("\nread from kernel module: %s", bonus);
-		//	information_error_check = sendto( sock, bonus, sizeof(bonus), 0, (struct sockaddr *) &addr, sizeof(addr));	event.first_switch = event.first_switch & 1;
-			if( information_error_check < 0)
-              	 	{
-                		   printf("Error sending the information to server\n");
-             		}
-			switch(bonus[1]) 
+//			pthread_mutex_lock(&lock);
+	//		printf("\nread from kernel module: %s", bonus);
+				switch(bonus[1]) 
 				{
 				case '4':
 				//	printf("\nupdate status:%s", bonus);
@@ -423,7 +418,7 @@ void *readthread( void *check_that_bitch)
 
 				}
 		bonus[0] = '\0';
-		pthread_mutex_unlock(&lock);
+	//	pthread_mutex_unlock(&lock);
 		}
 	//	bonus[0] = '\0';
 
