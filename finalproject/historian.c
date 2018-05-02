@@ -53,8 +53,8 @@ struct sockaddr_in server, send_this, receive;
 struct sockaddr_in addr, from;
 char buffer[MSG_SIZE];
 
-sqlite3 *event_log;
-sqlite3 *error;
+sqlite3 *dbfile;
+//sqlite3 *error;
 
 char *findIP(void){
     int fd;                                                 //IP finding code sourced and modified from
@@ -131,13 +131,13 @@ void database_connection()
 {
 	int rc, re;
 
-	rc = sqlite3_open( database_location, &error);
-	re = sqlite3_open( database_location, &event_log);
+	rc = sqlite3_open( database_location, &dbfile);
+//	re = sqlite3_open( database_location, &event_log);
 
 	
-	if( rc && re)
+	if( rc)
 	{
-		fprintf(stderr, "Could not open the database:%s\n", sqlite3_errmsg(error));
+		fprintf(stderr, "Could not open the database:%s\n", sqlite3_errmsg(dbfile));
 		exit(-1);
 	} 
 	else
@@ -163,7 +163,7 @@ void send_to_database_log( char message[MSG_SIZE])
 	char *query = str;
 	int res = 0;
 
-	res = sqlite3_exec(event_log, query, 0, 0, &err_msg);
+	res = sqlite3_exec(dbfile, query, 0, 0, &err_msg);
 	
 	if (res != SQLITE_OK )
         {
@@ -194,7 +194,7 @@ void send_to_database_error( char message[MSG_SIZE])
 	char *query = str;
 	int res = 0;
 
-	res = sqlite3_exec(error, query, 0, 0, &err_msg);
+	res = sqlite3_exec(dbfile, query, 0, 0, &err_msg);
 	
 	if (res != SQLITE_OK )
         {
