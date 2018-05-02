@@ -35,11 +35,11 @@
 #define port 4000
 #define pi_address "128.206.19.255" //dont forget to change
 #define historian_address "128.206.19.255" //dont forget to change 
-#define database_location "/desktop/database.db"// location of the database on the local machine
+#define database_location "database.db"// location of the database on the local machine
 
 //fuctions below main
-void send_to_database_log( char message);
-void send_to_database_error( char message);
+void send_to_database_log( char message[MSG_SIZE]);
+void send_to_database_error( char message[MSG_SIZE]);
 void *send_command( void *not_used);
 void *receive_update(void *not_used);
 void database_connection();
@@ -53,7 +53,8 @@ struct sockaddr_in server, send_this, receive;
 struct sockaddr_in addr, from;
 char buffer[MSG_SIZE];
 
-sqlite3 *dbfile;
+sqlite3 *event_log;
+sqlite3 *error;
 
 char *findIP(void){
     int fd;                                                 //IP finding code sourced and modified from
@@ -115,7 +116,7 @@ int main( int argc, char *argv[])
 	pthread_create(&write_sock, NULL, &send_command, NULL); 
 
 	//start accessing the database
-//	database_connection();
+	database_connection();
 	
 	while(1)
 	{
@@ -128,23 +129,25 @@ return 0;
 }
 void database_connection()
 {
-	int rc;
+	int rc, re;
 
-	rc = sqlite3_open( database_location, &dbfile);
+	rc = sqlite3_open( database_location, &error);
+	re = sqlite3_open( database_location, &event_log);
+
 	
-	if( rc )
+	if( rc && re)
 	{
-		fprintf(stderr, "Could not open the database:%s\n", sqlite3_errmsg(dbfile));
+		fprintf(stderr, "Could not open the database:%s\n", sqlite3_errmsg(error));
 		exit(-1);
 	} 
 	else
 	{
-	printf("opened the database successfully\n");
+	printf("opened both the databases successfully\n");
 	}
 
 	
 }
-void send_to_database_log( char message)
+void send_to_database_log( char message[MSG_SIZE])
 {	//database code used was from CMP3830
 	sqlite3_stmt *statement;
 	char *err_msg = 0;
@@ -153,14 +156,14 @@ void send_to_database_log( char message)
 	char cons[200] = "INSERT INTO Log VALUES";
 	
 	//insert_this = cons + to_string(messge);
-	strcat( cons, &message);
-	printf("%s\n", cons);
+	strcat( cons, message);
+//	printf("%s\n", cons);
 
 	char *str = cons;
 	char *query = str;
 	int res = 0;
 
-	res = sqlite3_exec(dbfile, query, 0, 0, &err_msg);
+	res = sqlite3_exec(event_log, query, 0, 0, &err_msg);
 	
 	if (res != SQLITE_OK )
         {
@@ -172,10 +175,10 @@ void send_to_database_log( char message)
             exit(-1);
         }
 	
-	printf("\nEntered into the database successful");
+//	printf("\nEntered into the database successful");
 
 }
-void send_to_database_error( char message)
+void send_to_database_error( char message[MSG_SIZE])
 {
 	sqlite3_stmt *statement;
 	char *err_msg = 0;
@@ -184,14 +187,14 @@ void send_to_database_error( char message)
 	char construct[200] = "INSERT INTO error VALUES";
 	
 	//insert_this = construct + to_string(messge);
-	strcat( construct, &message );
+	strcat( construct, message );
 	printf("%s\n", construct);
 	
 	char *str = construct;
 	char *query = str;
 	int res = 0;
 
-	res = sqlite3_exec(dbfile, query, 0, 0, &err_msg);
+	res = sqlite3_exec(error, query, 0, 0, &err_msg);
 	
 	if (res != SQLITE_OK )
         {
@@ -203,7 +206,7 @@ void send_to_database_error( char message)
             exit(-1);
         }
 	
-	printf("\nEntered into the database successful");
+	printf("\nEntered into the error database successful");
 	
 
 }
@@ -217,23 +220,27 @@ void *send_command( void *not_used)
 	
 	while(1)
 	{
-	scanf("%s", storage);
-	printf("\n%s", storage);
-	if( send != '\0')
+//	strcpy(buffer, storage);
+	scanf("\n%s", storage);
+//	printf("\n%s", storage);
+	if( storage != '\0')
 		{
-		bzero(send, MSG_SIZE);
-		strcpy(send, storage);
-//		printf("this was stored:%s\n", storage);
-		send_this.sin_addr.s_addr = inet_addr(pi_address);//change from boardcast address to pi address
-		information_error_check = sendto( sock, send, sizeof(send), 0, (struct sockaddr *) &send_this, sizeof(addr));
-               if( information_error_check < 0)
-              	 {
-                	   printf("Error sending the information to server\n");
-         	  }
+		if( storage[0] == '@' || storage[0] == '#')
+			{
+		
+			bzero(send, MSG_SIZE);
+			strcpy(send, storage);
+//			printf("this was stored:%s\n", storage);
+			send_this.sin_addr.s_addr = inet_addr(pi_address);//change from boardcast address to pi address
+			information_error_check = sendto( sock, send, sizeof(send), 0, (struct sockaddr *) &send_this, sizeof(addr));
+              		 if( information_error_check < 0)
+              		 {
+                		   printf("Error sending the information to server\n");
+         	 	 }
 		
 //		printf("message was sent: %s\n", send);//comment out once testing is done
 		//comment this once testing is done and we are ready to test the database side
-	//	send_to_database_log( send );
+			}
 		}
 	}
 	pthread_exit(0);
@@ -250,13 +257,24 @@ void *receive_update(void *not_used)
         bzero(buffer, MSG_SIZE);
 //	shot.sin_addr.s_addr = inet_addr(historian_address);
         information_error_check = recvfrom(sock, buffer, MSG_SIZE, 0, (struct sockaddr *)&receive, &fromlen);
-        if( information_error_check < 0)
+	   if( information_error_check < 0)
             {
                 printf("that was an error receiving infromation from the sock connection\n");
                 exit( -1);
             }
 //	printf("\nReceived was infomration was: %s\n", buffer);//comment out once testing is done 
-
-   }
+	if( buffer[0] != '@' && buffer[0] != '#')
+	{
+		if( buffer[0] == '!')
+		{
+		send_to_database_error( buffer );
+		}
+		else
+		{
+		send_to_database_log(  buffer );
+		}
+   	}
+	
+  }
     pthread_exit(0);
 }
