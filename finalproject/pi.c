@@ -250,7 +250,7 @@ void *ADC_read( void *ADC_chan)
 	if( MAX < ADCvalue || MIN > ADCvalue)
 	{
 		event.line_overload = 1;
-//		log_change(overload);
+//		log_change(overload); uncomment for final test
 	//	printf("\nevent line overload");	
 	}
 	//value[i] = sample_value;
@@ -259,7 +259,7 @@ void *ADC_read( void *ADC_chan)
 	if( value[0] = value[1] = value[2] = value[3] = value[4] )
 	{
 		event.no_power = 1;
-//		log_change(zero_power);
+//		log_change(zero_power); uncomment for final test
 	//	printf("\n event no power"); 
 	}
 			
