@@ -23,7 +23,7 @@
 
 #define MSG_SIZE 100;
 #define port 4000;
-#define pi_address "128.206.19.255"; //dont forget to change
+#define pi_address "128.206.19.17"; //dont forget to change
 #define historian_address "128.206.19.255"; //dont forget to change 
 #define database location "/desktop/4222.db";// location of the database on the local machine
 
