@@ -35,10 +35,10 @@
 #define port 4000
 #define pi_address "128.206.19.255" //dont forget to change
 #define historian_address "128.206.19.255" //dont forget to change 
-#define database_location "/desktop/database.db"// location of the database on the local machine
+#define database_location "database.db"// location of the database on the local machine
 
 //fuctions below main
-void send_to_database_log( char message);
+void send_to_database_log( char message[MSG_SIZE]);
 void send_to_database_error( char message);
 void *send_command( void *not_used);
 void *receive_update(void *not_used);
@@ -115,7 +115,7 @@ int main( int argc, char *argv[])
 	pthread_create(&write_sock, NULL, &send_command, NULL); 
 
 	//start accessing the database
-//	database_connection();
+	database_connection();
 	
 	while(1)
 	{
@@ -144,7 +144,7 @@ void database_connection()
 
 	
 }
-void send_to_database_log( char message)
+void send_to_database_log( char message[MSG_SIZE])
 {	//database code used was from CMP3830
 	sqlite3_stmt *statement;
 	char *err_msg = 0;
@@ -153,7 +153,7 @@ void send_to_database_log( char message)
 	char cons[200] = "INSERT INTO Log VALUES";
 	
 	//insert_this = cons + to_string(messge);
-	strcat( cons, &message);
+	strcat( cons, message);
 	printf("%s\n", cons);
 
 	char *str = cons;
@@ -231,10 +231,9 @@ void *send_command( void *not_used)
                 	   printf("Error sending the information to server\n");
          	  }
 		
-//		printf("message was sent: %s\n", send);//comment out once testing is done
+		printf("message was sent: %s\n", send);//comment out once testing is done
 		//comment this once testing is done and we are ready to test the database side
-	//	send_to_database_log( send );
-		}
+	}
 	}
 	pthread_exit(0);
 }
@@ -256,7 +255,7 @@ void *receive_update(void *not_used)
                 exit( -1);
             }
 //	printf("\nReceived was infomration was: %s\n", buffer);//comment out once testing is done 
-
+	send_to_database_log(  buffer );
    }
     pthread_exit(0);
 }
