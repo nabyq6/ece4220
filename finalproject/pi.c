@@ -279,7 +279,7 @@ void * time_update( void* not_used)
 	update.sin_family = AF_INET;
 	update.sin_addr.s_addr = INADDR_ANY;
 	update.sin_port = htons(4000);
-	update.sin_addr.s_addr = inet_addr("128.206.19.255");
+	update.sin_addr.s_addr = inet_addr("128.206.19.117");
 	
 
 	struct timespec time;
@@ -304,7 +304,7 @@ void * time_update( void* not_used)
 	
 	while(1)
 	{
-		filter_boardcast = 1;
+	//	filter_boardcast = 1;
 		bzero(update_buffer, 50);				
 		read(time_fd, &num_periods, sizeof(num_periods));
 		if( num_periods > 1)
@@ -312,7 +312,7 @@ void * time_update( void* not_used)
 			printf("Window was missed for sending data\n");
 			exit(-1);
 		}
-		sprintf(update_buffer, "(?, 1, %d, %d, %d, %d, %d, %d, %d, %d, %d , NOW())"
+		sprintf(update_buffer, "(?, 1, %d, %d, %d, %d, %d, %d, %d, %d, %d , NOW());"
 			, event.blue_status
 			, event.yellow_status
 			, event.green_status
@@ -330,7 +330,7 @@ void * time_update( void* not_used)
 		{
 			printf("Error sending the information to server\n");
 		}
-		
+		filter_boardcast = 0; 
 		update_buffer == '\0';
 			
 	}	
@@ -360,9 +360,9 @@ void *readthread( void *check_that_bitch)
 		bzero(bonus, MSG_SIZE);
 		if( read(cdev_id, bonus, sizeof(bonus)) == -1)
 		{
-			//printf("error with the read");
+			printf("error with the read");
 		}
-	//	printf("%s\n", bonus);
+	//	printf("bonus is:%s\n", bonus);
 		if( bonus[0] == '!')
 		{
 			pthread_mutex_lock(&lock);
@@ -435,19 +435,21 @@ void *commandleds(void *not_gonna_be_used)
 {
 	//gonna have to figure out how to implement data base then come back and add that implementation
 	char led[MSG_SIZE];
-	
+	set_thread_priority(10);
 	event.yellow_status = 0;
 	event.green_status = 0;
 	event.blue_status = 0;	
 	while(1)
 	{
+		pthread_mutex_lock(&lock);
+	//	printf("inside loop\n");
 		if( filter_boardcast != 1)
 		{
 		if( read(sock, &led, sizeof(led)) < 0)
 		{
 	  	 	printf("error receiving led command in commandled function\n");
 		}
-				printf("\nreceived command is:%s", led); 
+		printf("\nreceived command is:%s", led); 
 		if( led[0] == '@')
 		{
 			switch(led[1])
@@ -493,6 +495,8 @@ void *commandleds(void *not_gonna_be_used)
 			}
 		}
 		}
+	//	else
+	pthread_mutex_unlock(&lock);
 	 }
 	pthread_exit(NULL);
 }
