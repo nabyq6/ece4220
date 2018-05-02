@@ -46,7 +46,9 @@ void *readthread(void *check_this_bitch);//thread to read from character device
 void *commandleds(void *not_gonna_be_used);//command to turn the leds on or off
 void set_thread_priority( int change_priority);//set thread priority 
 void *time_update( void * not_used);//send a status update
-void *ADC_read( void*  ADC_chan); 
+void *ADC_read( void*  ADC_chan);
+int log_change( char message[200]);
+ 
 
 // alot of code if not most of it is copied and used from lab5 sockets
 int sock;
@@ -54,7 +56,7 @@ int cdev_id;
 struct sockaddr_in addr, from;
 int master = 0;
 int information_error_check, number;
-struct sockaddr_in update;
+struct sockaddr_in update, send_error;
 int filter_boardcast;
 
 
@@ -236,7 +238,8 @@ void *ADC_read( void *ADC_chan)
 	int sample_value;
 	int value[5];
 	int i = 0;
-
+	char overload[MSG_SIZE] ="line overload occured" ;
+	char zero_power[MSG_SIZE] = "no power occured";
 	while(1)
 	{
 		ADCvalue = get_ADC( ADC_CHANNEL);
@@ -247,6 +250,7 @@ void *ADC_read( void *ADC_chan)
 	if( MAX < ADCvalue || MIN > ADCvalue)
 	{
 		event.line_overload = 1;
+//		log_change(overload); uncomment for final test
 	//	printf("\nevent line overload");	
 	}
 	//value[i] = sample_value;
@@ -255,6 +259,7 @@ void *ADC_read( void *ADC_chan)
 	if( value[0] = value[1] = value[2] = value[3] = value[4] )
 	{
 		event.no_power = 1;
+//		log_change(zero_power); uncomment for final test
 	//	printf("\n event no power"); 
 	}
 			
@@ -338,6 +343,31 @@ void * time_update( void* not_used)
 	pthread_exit(0);
 
 }
+int log_change( char message[MSG_SIZE])
+{
+		char error_log[MSG_SIZE];
+
+		send_error.sin_family = AF_INET;
+		send_error.sin_addr.s_addr = INADDR_ANY;
+		send_error.sin_port = htons(4000);
+		send_error.sin_addr.s_addr = inet_addr("128.206.19.117");
+
+		sprintf( error_log, "( ?, 1, 'change:%s', time());"
+			, message );
+//		printf("%s \n", error_log);
+		information_error_check = sendto( sock, error_log, sizeof(error_log), 0, (struct sockaddr *) &send_error, sizeof(send_error));
+	//	printf("\n sent");
+		if(information_error_check < 0)
+		{
+			printf("Error sending the information to server\n");
+		}
+		else 
+		{
+	//		printf("\nerror was sent to be logged\n");
+		}
+
+	return ;
+}
 
 void *readthread( void *check_that_bitch)
 {	
@@ -352,10 +382,6 @@ void *readthread( void *check_that_bitch)
 	char bonus[MSG_SIZE];
 	while(1)
 	{
-		//set the status of buttons to zero
-	//	event.button_one = 0;
-	//	event.button_two = 0;
-	//	pthread_mutex_lock(&lock);
 		bzero(bonus, MSG_SIZE);
 		if( read(cdev_id, bonus, sizeof(bonus)) == -1)
 		{
@@ -365,12 +391,13 @@ void *readthread( void *check_that_bitch)
 	//	printf("bonus is:%s\n", bonus);
 		if( bonus[0] == '!')
 		{
-			pthread_mutex_lock(&lock);
-	//		printf("\nread from kernel module: %s", bonus);
+		//	pthread_mutex_lock(&lock);
+		//	printf("\nread from kernel module: %s", bonus);
 				switch(bonus[1]) 
 				{
 				case '4':
 				//	printf("\nupdate status:%s", bonus);
+				//	pthread_mutex_lock(&lock);
 					if(event.first_switch == 0)
 					{		
 					event.first_switch = 1;
@@ -379,9 +406,11 @@ void *readthread( void *check_that_bitch)
 					{
 					event.first_switch  = 0;
 					}
+				//	pthread_mutex_unlock(&lock);
 					break; 
 				case '3':
 				//	printf("\nupdate status:%s", bonus);
+				//	pthread_mutex_lock(&lock);
 					if(event.second_switch == 0)
 					{		
 					event.second_switch = 1;
@@ -389,6 +418,7 @@ void *readthread( void *check_that_bitch)
 					else 
 					{
 					event.second_switch  = 0;
+				//	pthread_mutex_unlock(&lock);
 					}
 					
 					break;
@@ -412,13 +442,12 @@ void *readthread( void *check_that_bitch)
 					else 
 					{
 					event.button_two = 0;
-					}
-							
+					}		
 					break; 
-
 				}
-		bonus[0] = '\0';
-		pthread_mutex_unlock(&lock);
+			log_change(bonus);
+			bonus[0] = '\0';
+		//	pthread_mutex_unlock(&lock);
 		}
 	//	bonus[0] = '\0';
 
@@ -444,7 +473,7 @@ void *commandleds(void *not_gonna_be_used)
 		{
 	  	 	printf("error receiving led command in commandled function\n");
 		}
-		printf("\nreceived command is:%s", led); 
+	//	printf("\nreceived command is:%s", led); 
 		if( led[0] == '@')
 		{
 			switch(led[1])
@@ -464,8 +493,9 @@ void *commandleds(void *not_gonna_be_used)
 				digitalWrite( YELLOW, HIGH);
 				event.yellow_status = 1;
 				break;
-
+		
 			}
+		  log_change(led);
 		}
 		if( led[0]  == '#')
 		{
@@ -487,7 +517,8 @@ void *commandleds(void *not_gonna_be_used)
 				event.yellow_status = 0;
 				break;
 
-			}
+			}	
+		log_change(led);
 		}
 		}
 	//	else
