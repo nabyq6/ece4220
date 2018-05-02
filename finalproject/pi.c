@@ -365,7 +365,7 @@ void *readthread( void *check_that_bitch)
 	//	printf("bonus is:%s\n", bonus);
 		if( bonus[0] == '!')
 		{
-//			pthread_mutex_lock(&lock);
+			pthread_mutex_lock(&lock);
 	//		printf("\nread from kernel module: %s", bonus);
 				switch(bonus[1]) 
 				{
@@ -418,7 +418,7 @@ void *readthread( void *check_that_bitch)
 
 				}
 		bonus[0] = '\0';
-	//	pthread_mutex_unlock(&lock);
+		pthread_mutex_unlock(&lock);
 		}
 	//	bonus[0] = '\0';
 
@@ -450,17 +450,17 @@ void *commandleds(void *not_gonna_be_used)
 			switch(led[1])
 			{
 			case 'B':
-				printf("command to turn on blue light\n");
+			//	printf("command to turn on blue light\n");
 				digitalWrite( BLUE, HIGH);
 				event.blue_status = 1;
 				break;
 			case 'G':
-				printf("command to turn on green light\n");
+			//	printf("command to turn on green light\n");
 				digitalWrite( GREEN, HIGH);
 				event.green_status = 1;
 				break;
 			case 'Y':
-				printf("command to turn on yellow light\n");
+			//	printf("command to turn on yellow light\n");
 				digitalWrite( YELLOW, HIGH);
 				event.yellow_status = 1;
 				break;
@@ -472,17 +472,17 @@ void *commandleds(void *not_gonna_be_used)
 			switch(led[1])
 			{
 			case 'B':
-				printf("command to turn off blue light\n");
+			//	printf("command to turn off blue light\n");
 				digitalWrite( BLUE, LOW);
 				event.blue_status = 0;
 				break;
 			case 'G':
-				printf("command to turn off green light\n");
+			//	printf("command to turn off green light\n");
 				digitalWrite( GREEN, LOW);
 				event.green_status = 0;
 				break;
 			case 'Y':
-				printf("command to turn off yellow light\n");
+			//	printf("command to turn off yellow light\n");
 				digitalWrite( YELLOW, LOW);
 				event.yellow_status = 0;
 				break;
